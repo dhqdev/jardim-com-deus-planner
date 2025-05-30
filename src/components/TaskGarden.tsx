@@ -1,61 +1,23 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Filter, Droplet, Trash2 } from 'lucide-react';
 import { NewTaskModal } from '@/components/NewTaskModal';
 import { HarvestModal } from '@/components/HarvestModal';
-
-interface Task {
-  id: string;
-  title: string;
-  category: string;
-  status: 'seed' | 'sprout' | 'flower';
-  priority: 'low' | 'medium' | 'high';
-  verse?: string;
-  watered: boolean;
-  theme?: string;
-}
+import { useUserTasks, UserTask } from '@/hooks/useUserTasks';
+import { useToast } from '@/hooks/use-toast';
 
 interface TaskGardenProps {
   currentTheme: string;
 }
 
 export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: '1',
-      title: 'Oração matinal',
-      category: 'Oração',
-      status: 'flower',
-      priority: 'high',
-      verse: 'Pela manhã, Senhor, ouves a minha voz; pela manhã eu me dirijo a ti, e fico esperando. - Salmos 5:3',
-      watered: true,
-      theme: 'gratidão'
-    },
-    {
-      id: '2',
-      title: 'Estudar 1 Coríntios 13',
-      category: 'Estudo Bíblico',
-      status: 'sprout',
-      priority: 'medium',
-      watered: false,
-      theme: 'sabedoria'
-    },
-    {
-      id: '3',
-      title: 'Visitar família Santos',
-      category: 'Serviço',
-      status: 'seed',
-      priority: 'medium',
-      watered: false,
-      theme: 'amor'
-    }
-  ]);
-  
+  const { tasks, loading, createTask, updateTask, deleteTask } = useUserTasks();
   const [showNewTask, setShowNewTask] = useState(false);
   const [showHarvest, setShowHarvest] = useState(false);
-  const [harvestTask, setHarvestTask] = useState<Task | null>(null);
-  const [filter, setFilter] = useState('all');
+  const [harvestTask, setHarvestTask] = useState<UserTask | null>(null);
+  const { toast } = useToast();
 
   const getPlantEmoji = (category: string, status: string) => {
     const plants = {
@@ -71,34 +33,72 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     return plants[category]?.[status] || '🌱';
   };
 
-  const waterTask = (taskId: string) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, watered: !task.watered } : task
-    ));
+  const getTaskStatus = (task: UserTask) => {
+    if (task.completed) return 'flower';
+    // Simple logic: if task is older than 3 days, it's sprouting
+    const daysSinceCreation = Math.floor((Date.now() - new Date(task.created_at).getTime()) / (1000 * 60 * 60 * 24));
+    return daysSinceCreation > 3 ? 'sprout' : 'seed';
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
+  const handleDeleteTask = async (taskId: string) => {
+    const result = await deleteTask(taskId);
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível excluir a tarefa.",
+      });
+    }
   };
 
-  const completeTask = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
-
-    if (task.status === 'flower') {
+  const handleCompleteTask = async (task: UserTask) => {
+    if (task.completed) {
       setHarvestTask(task);
       setShowHarvest(true);
       setTimeout(() => {
-        deleteTask(taskId);
+        handleDeleteTask(task.id);
       }, 1000);
     } else {
-      setTasks(tasks.map(t => {
-        if (t.id === taskId) {
-          const newStatus = t.status === 'seed' ? 'sprout' : 'flower';
-          return { ...t, status: newStatus };
-        }
-        return t;
-      }));
+      const result = await updateTask(task.id, { 
+        completed: true,
+        completed_at: new Date().toISOString()
+      });
+      
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível completar a tarefa.",
+        });
+      } else {
+        toast({
+          title: "Parabéns!",
+          description: "Tarefa completada com sucesso!",
+        });
+      }
+    }
+  };
+
+  const handleSaveTask = async (newTask: any) => {
+    const result = await createTask({
+      title: newTask.title,
+      description: newTask.description || null,
+      category: newTask.category,
+      verse: newTask.verse || null,
+    });
+
+    if (result.error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível criar a tarefa.",
+      });
+    } else {
+      setShowNewTask(false);
+      toast({
+        title: "Sucesso!",
+        description: "Nova tarefa plantada no seu jardim!",
+      });
     }
   };
 
@@ -112,6 +112,14 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     "Posso todas as coisas naquele que me fortalece. - Filipenses 4:13",
     "O Senhor é a minha força e o meu escudo; nele confiou o meu coração. - Salmos 28:7"
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-green-800">Carregando suas tarefas...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -148,83 +156,95 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
 
       {/* Task Garden Grid - Mobile responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {tasks.map((task) => (
-          <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-4 md:p-6 hover:bg-white/40 transition-all duration-300 hover:scale-105 relative">
-            {/* Delete button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => deleteTask(task.id)}
-              className="absolute top-1 right-1 md:top-2 md:right-2 p-1 md:p-2 text-red-500 hover:text-red-700 hover:bg-red-50"
-              title="Excluir tarefa"
-            >
-              <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
-            </Button>
+        {tasks.map((task) => {
+          const status = getTaskStatus(task);
+          return (
+            <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-4 md:p-6 hover:bg-white/40 transition-all duration-300 hover:scale-105 relative">
+              {/* Delete button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeleteTask(task.id)}
+                className="absolute top-1 right-1 md:top-2 md:right-2 p-1 md:p-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+                title="Excluir tarefa"
+              >
+                <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
+              </Button>
 
-            <div className="text-center mb-3 md:mb-4 mt-2 md:mt-4">
-              <div className="text-4xl md:text-6xl mb-2 animate-bounce" style={{ animationDuration: '3s' }}>
-                {getPlantEmoji(task.category, task.status)}
+              <div className="text-center mb-3 md:mb-4 mt-2 md:mt-4">
+                <div className="text-4xl md:text-6xl mb-2 animate-bounce" style={{ animationDuration: '3s' }}>
+                  {getPlantEmoji(task.category, status)}
+                </div>
+                <div className="text-xs md:text-sm text-green-600 mb-1">{task.category}</div>
+                <h3 className="font-semibold text-green-800 text-sm md:text-base">{task.title}</h3>
+                {task.description && (
+                  <p className="text-xs text-green-600 mt-1">{task.description}</p>
+                )}
               </div>
-              <div className="text-xs md:text-sm text-green-600 mb-1">{task.category}</div>
-              <h3 className="font-semibold text-green-800 text-sm md:text-base">{task.title}</h3>
-              {task.theme && (
-                <div className="text-xs text-green-500 mt-1">Tema: {task.theme}</div>
-              )}
-            </div>
-            
-            <div className="space-y-2 md:space-y-3">
-              <div className="flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                  task.status === 'seed' ? 'bg-yellow-200 text-yellow-800' :
-                  task.status === 'sprout' ? 'bg-green-200 text-green-800' :
-                  'bg-pink-200 text-pink-800'
-                }`}>
-                  {task.status === 'seed' ? 'Semente' :
-                   task.status === 'sprout' ? 'Brotando' : 'Florescendo'}
-                </span>
+              
+              <div className="space-y-2 md:space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    status === 'seed' ? 'bg-yellow-200 text-yellow-800' :
+                    status === 'sprout' ? 'bg-green-200 text-green-800' :
+                    'bg-pink-200 text-pink-800'
+                  }`}>
+                    {status === 'seed' ? 'Semente' :
+                     status === 'sprout' ? 'Brotando' : 'Florescendo'}
+                  </span>
+                </div>
                 
-                <Button
-                  variant="ghost"
+                {task.verse && (
+                  <div className="text-xs italic text-green-700 bg-green-50/50 p-2 rounded leading-relaxed">
+                    {task.verse.length > 80 ? task.verse.substring(0, 80) + '...' : task.verse}
+                  </div>
+                )}
+                
+                <Button 
+                  onClick={() => handleCompleteTask(task)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white text-xs md:text-sm"
                   size="sm"
-                  onClick={() => waterTask(task.id)}
-                  className={`p-1 md:p-2 ${task.watered ? 'text-blue-600' : 'text-gray-400'}`}
-                  title="Regar com oração"
+                  disabled={task.completed}
                 >
-                  <Droplet className="w-3 h-3 md:w-4 md:h-4" />
+                  {task.completed ? 'Colher Fruto' : 'Completar Tarefa'}
                 </Button>
               </div>
-              
-              {task.verse && (
-                <div className="text-xs italic text-green-700 bg-green-50/50 p-2 rounded leading-relaxed">
-                  {task.verse.length > 80 ? task.verse.substring(0, 80) + '...' : task.verse}
-                </div>
-              )}
-              
-              <Button 
-                onClick={() => completeTask(task.id)}
-                className="w-full bg-green-500 hover:bg-green-600 text-white text-xs md:text-sm"
-                size="sm"
-              >
-                {task.status === 'flower' ? 'Colher Fruto' : 'Fazer Crescer'}
-              </Button>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
+
+        {tasks.length === 0 && (
+          <div className="col-span-full text-center py-8">
+            <p className="text-green-600 mb-4">Seu jardim está vazio. Plante sua primeira semente!</p>
+            <Button 
+              onClick={() => setShowNewTask(true)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Plantar Primeira Tarefa
+            </Button>
+          </div>
+        )}
       </div>
 
       {showNewTask && (
         <NewTaskModal 
           onClose={() => setShowNewTask(false)}
-          onSave={(newTask) => {
-            setTasks([...tasks, { ...newTask, id: Date.now().toString() }]);
-            setShowNewTask(false);
-          }}
+          onSave={handleSaveTask}
         />
       )}
 
       {showHarvest && harvestTask && (
         <HarvestModal 
-          task={harvestTask}
+          task={{
+            id: harvestTask.id,
+            title: harvestTask.title,
+            category: harvestTask.category,
+            status: 'flower',
+            priority: 'medium',
+            verse: harvestTask.verse,
+            watered: true
+          }}
           verse={harvestVerses[Math.floor(Math.random() * harvestVerses.length)]}
           onClose={() => {
             setShowHarvest(false);

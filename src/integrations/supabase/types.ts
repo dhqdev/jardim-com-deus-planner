@@ -9,7 +9,135 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      diary_entries: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          mood: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          mood?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          mood?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          church: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          testimony: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          church?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          testimony?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          church?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          testimony?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          email_reminders: boolean | null
+          id: string
+          notifications: boolean | null
+          sound_effects: boolean | null
+          theme: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_reminders?: boolean | null
+          id: string
+          notifications?: boolean | null
+          sound_effects?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_reminders?: boolean | null
+          id?: string
+          notifications?: boolean | null
+          sound_effects?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_tasks: {
+        Row: {
+          category: string
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string
+          verse: string | null
+        }
+        Insert: {
+          category: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id: string
+          verse?: string | null
+        }
+        Update: {
+          category?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          verse?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

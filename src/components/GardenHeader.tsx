@@ -1,7 +1,9 @@
 
 import React from 'react';
-import { Flower, Settings, User, Sun, Moon } from 'lucide-react';
+import { Flower, Settings, User, Sun, Moon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface GardenHeaderProps {
   currentTheme: string;
@@ -9,6 +11,14 @@ interface GardenHeaderProps {
 }
 
 export const GardenHeader = ({ currentTheme, setCurrentTheme }: GardenHeaderProps) => {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   const themeIcons = {
     morning: <Sun className="w-4 h-4" />,
     desert: <div className="w-4 h-4">🌵</div>,
@@ -42,12 +52,14 @@ export const GardenHeader = ({ currentTheme, setCurrentTheme }: GardenHeaderProp
             ))}
           </div>
           
-          <Button variant="ghost" size="sm" className="text-green-700">
-            <Settings className="w-5 h-5" />
-          </Button>
-          
-          <Button variant="ghost" size="sm" className="text-green-700">
-            <User className="w-5 h-5" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-green-700"
+            onClick={handleSignOut}
+            title="Sair da conta"
+          >
+            <LogOut className="w-5 h-5" />
           </Button>
         </div>
       </div>
