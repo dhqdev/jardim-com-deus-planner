@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,6 +13,7 @@ interface Task {
   priority: 'low' | 'medium' | 'high';
   verse?: string;
   watered: boolean;
+  theme?: string;
 }
 
 interface TaskGardenProps {
@@ -29,7 +29,8 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       status: 'flower',
       priority: 'high',
       verse: 'Pela manhã, Senhor, ouves a minha voz; pela manhã eu me dirijo a ti, e fico esperando. - Salmos 5:3',
-      watered: true
+      watered: true,
+      theme: 'gratidão'
     },
     {
       id: '2',
@@ -37,7 +38,8 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       category: 'Estudo Bíblico',
       status: 'sprout',
       priority: 'medium',
-      watered: false
+      watered: false,
+      theme: 'sabedoria'
     },
     {
       id: '3',
@@ -45,7 +47,8 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       category: 'Serviço',
       status: 'seed',
       priority: 'medium',
-      watered: false
+      watered: false,
+      theme: 'amor'
     }
   ]);
   
@@ -60,7 +63,9 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       'Estudo Bíblico': { seed: '🌰', sprout: '🌳', flower: '🫒' },
       'Família': { seed: '🌱', sprout: '🌹', flower: '🌺' },
       'Trabalho': { seed: '🌱', sprout: '🌾', flower: '🌻' },
-      'Serviço': { seed: '🌱', sprout: '🌿', flower: '🌼' }
+      'Serviço': { seed: '🌱', sprout: '🌿', flower: '🌼' },
+      'Saúde': { seed: '🌱', sprout: '🌿', flower: '🌿' },
+      'Finanças': { seed: '🌱', sprout: '🌾', flower: '💰' }
     };
     
     return plants[category]?.[status] || '🌱';
@@ -81,15 +86,12 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     if (!task) return;
 
     if (task.status === 'flower') {
-      // Se já é flor, hora de colher o fruto
       setHarvestTask(task);
       setShowHarvest(true);
-      // Remove a tarefa após mostrar o modal
       setTimeout(() => {
         deleteTask(taskId);
       }, 1000);
     } else {
-      // Faz crescer normalmente
       setTasks(tasks.map(t => {
         if (t.id === taskId) {
           const newStatus = t.status === 'seed' ? 'sprout' : 'flower';
@@ -104,62 +106,73 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     "Mas o fruto do Espírito é: amor, alegria, paz, longanimidade, benignidade, bondade, fidelidade, mansidão, domínio próprio. - Gálatas 5:22-23",
     "Toda boa dádiva e todo dom perfeito vêm do alto, descendo do Pai das luzes. - Tiago 1:17",
     "Aquele que semeia abundantemente, abundantemente também ceifará. - 2 Coríntios 9:6",
-    "O trabalho de suas mãos tu abençoarás, e seus bens se multiplicarão na terra. - Jó 1:10"
+    "O trabalho de suas mãos tu abençoarás, e seus bens se multiplicarão na terra. - Jó 1:10",
+    "Tudo quanto te vier à mão para fazer, faze-o conforme as tuas forças. - Eclesiastes 9:10",
+    "Entrega o teu caminho ao Senhor; confia nele, e ele tudo fará. - Salmos 37:5",
+    "Posso todas as coisas naquele que me fortalece. - Filipenses 4:13",
+    "O Senhor é a minha força e o meu escudo; nele confiou o meu coração. - Salmos 28:7"
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header with actions */}
-      <div className="flex items-center justify-between bg-white/20 backdrop-blur-sm rounded-xl p-6">
-        <div>
-          <h2 className="text-3xl font-bold text-green-800">Seu Canteiro de Responsabilidades</h2>
-          <p className="text-green-600 mt-2">Cada tarefa é uma semente de propósito plantada com amor</p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="bg-white/50"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filtrar
-          </Button>
+    <div className="space-y-4 md:space-y-6">
+      {/* Header with actions - Mobile optimized */}
+      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 md:p-6">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl md:text-3xl font-bold text-green-800">Seu Canteiro de Responsabilidades</h2>
+            <p className="text-green-600 mt-2 text-sm md:text-base">Cada tarefa é uma semente de propósito plantada com amor</p>
+          </div>
           
-          <Button 
-            onClick={() => setShowNewTask(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Plantar Nova Tarefa
-          </Button>
+          <div className="flex items-center justify-center space-x-2 md:space-x-4">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-white/50 text-xs md:text-sm"
+            >
+              <Filter className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Filtrar</span>
+            </Button>
+            
+            <Button 
+              onClick={() => setShowNewTask(true)}
+              className="bg-green-600 hover:bg-green-700 text-xs md:text-sm"
+              size="sm"
+            >
+              <Plus className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Plantar Nova</span>
+              <span className="sm:hidden">Nova</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Task Garden Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Task Garden Grid - Mobile responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {tasks.map((task) => (
-          <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-6 hover:bg-white/40 transition-all duration-300 hover:scale-105 relative">
+          <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-4 md:p-6 hover:bg-white/40 transition-all duration-300 hover:scale-105 relative">
             {/* Delete button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => deleteTask(task.id)}
-              className="absolute top-2 right-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="absolute top-1 right-1 md:top-2 md:right-2 p-1 md:p-2 text-red-500 hover:text-red-700 hover:bg-red-50"
               title="Excluir tarefa"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
             </Button>
 
-            <div className="text-center mb-4 mt-4">
-              <div className="text-6xl mb-2 animate-bounce" style={{ animationDuration: '3s' }}>
+            <div className="text-center mb-3 md:mb-4 mt-2 md:mt-4">
+              <div className="text-4xl md:text-6xl mb-2 animate-bounce" style={{ animationDuration: '3s' }}>
                 {getPlantEmoji(task.category, task.status)}
               </div>
-              <div className="text-sm text-green-600 mb-1">{task.category}</div>
-              <h3 className="font-semibold text-green-800">{task.title}</h3>
+              <div className="text-xs md:text-sm text-green-600 mb-1">{task.category}</div>
+              <h3 className="font-semibold text-green-800 text-sm md:text-base">{task.title}</h3>
+              {task.theme && (
+                <div className="text-xs text-green-500 mt-1">Tema: {task.theme}</div>
+              )}
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               <div className="flex items-center justify-between">
                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                   task.status === 'seed' ? 'bg-yellow-200 text-yellow-800' :
@@ -170,28 +183,26 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
                    task.status === 'sprout' ? 'Brotando' : 'Florescendo'}
                 </span>
                 
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => waterTask(task.id)}
-                    className={`p-2 ${task.watered ? 'text-blue-600' : 'text-gray-400'}`}
-                    title="Regar com oração"
-                  >
-                    <Droplet className="w-4 h-4" />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => waterTask(task.id)}
+                  className={`p-1 md:p-2 ${task.watered ? 'text-blue-600' : 'text-gray-400'}`}
+                  title="Regar com oração"
+                >
+                  <Droplet className="w-3 h-3 md:w-4 md:h-4" />
+                </Button>
               </div>
               
               {task.verse && (
-                <div className="text-xs italic text-green-700 bg-green-50/50 p-2 rounded">
-                  {task.verse}
+                <div className="text-xs italic text-green-700 bg-green-50/50 p-2 rounded leading-relaxed">
+                  {task.verse.length > 80 ? task.verse.substring(0, 80) + '...' : task.verse}
                 </div>
               )}
               
               <Button 
                 onClick={() => completeTask(task.id)}
-                className="w-full bg-green-500 hover:bg-green-600 text-white"
+                className="w-full bg-green-500 hover:bg-green-600 text-white text-xs md:text-sm"
                 size="sm"
               >
                 {task.status === 'flower' ? 'Colher Fruto' : 'Fazer Crescer'}
