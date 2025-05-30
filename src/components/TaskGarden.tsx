@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Filter, Droplet } from 'lucide-react';
+import { Plus, Filter, Droplet, Trash2 } from 'lucide-react';
 import { NewTaskModal } from '@/components/NewTaskModal';
+import { HarvestModal } from '@/components/HarvestModal';
 
 interface Task {
   id: string;
@@ -49,6 +50,8 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
   ]);
   
   const [showNewTask, setShowNewTask] = useState(false);
+  const [showHarvest, setShowHarvest] = useState(false);
+  const [harvestTask, setHarvestTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState('all');
 
   const getPlantEmoji = (category: string, status: string) => {
@@ -69,16 +72,40 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     ));
   };
 
-  const completeTask = (taskId: string) => {
-    setTasks(tasks.map(task => {
-      if (task.id === taskId) {
-        const newStatus = task.status === 'seed' ? 'sprout' : 
-                         task.status === 'sprout' ? 'flower' : 'flower';
-        return { ...task, status: newStatus };
-      }
-      return task;
-    }));
+  const deleteTask = (taskId: string) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
   };
+
+  const completeTask = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    if (task.status === 'flower') {
+      // Se já é flor, hora de colher o fruto
+      setHarvestTask(task);
+      setShowHarvest(true);
+      // Remove a tarefa após mostrar o modal
+      setTimeout(() => {
+        deleteTask(taskId);
+      }, 1000);
+    } else {
+      // Faz crescer normalmente
+      setTasks(tasks.map(t => {
+        if (t.id === taskId) {
+          const newStatus = t.status === 'seed' ? 'sprout' : 'flower';
+          return { ...t, status: newStatus };
+        }
+        return t;
+      }));
+    }
+  };
+
+  const harvestVerses = [
+    "Mas o fruto do Espírito é: amor, alegria, paz, longanimidade, benignidade, bondade, fidelidade, mansidão, domínio próprio. - Gálatas 5:22-23",
+    "Toda boa dádiva e todo dom perfeito vêm do alto, descendo do Pai das luzes. - Tiago 1:17",
+    "Aquele que semeia abundantemente, abundantemente também ceifará. - 2 Coríntios 9:6",
+    "O trabalho de suas mãos tu abençoarás, e seus bens se multiplicarão na terra. - Jó 1:10"
+  ];
 
   return (
     <div className="space-y-6">
@@ -112,8 +139,19 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       {/* Task Garden Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tasks.map((task) => (
-          <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-6 hover:bg-white/40 transition-all duration-300 hover:scale-105">
-            <div className="text-center mb-4">
+          <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-6 hover:bg-white/40 transition-all duration-300 hover:scale-105 relative">
+            {/* Delete button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => deleteTask(task.id)}
+              className="absolute top-2 right-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50"
+              title="Excluir tarefa"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+
+            <div className="text-center mb-4 mt-4">
               <div className="text-6xl mb-2 animate-bounce" style={{ animationDuration: '3s' }}>
                 {getPlantEmoji(task.category, task.status)}
               </div>
@@ -169,6 +207,17 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
           onSave={(newTask) => {
             setTasks([...tasks, { ...newTask, id: Date.now().toString() }]);
             setShowNewTask(false);
+          }}
+        />
+      )}
+
+      {showHarvest && harvestTask && (
+        <HarvestModal 
+          task={harvestTask}
+          verse={harvestVerses[Math.floor(Math.random() * harvestVerses.length)]}
+          onClose={() => {
+            setShowHarvest(false);
+            setHarvestTask(null);
           }}
         />
       )}
