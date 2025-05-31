@@ -44,10 +44,19 @@ export function useUserTasks() {
       if (error) {
         console.error('Error fetching tasks:', error);
       } else {
-        // Garante que due_date existe nos dados retornados
+        // Garantir que due_date sempre seja incluído
         const tasksWithDueDate = (data || []).map(task => ({
-          ...task,
-          due_date: task.due_date || null
+          id: task.id,
+          user_id: task.user_id,
+          title: task.title,
+          description: task.description,
+          category: task.category,
+          verse: task.verse,
+          completed: task.completed,
+          completed_at: task.completed_at,
+          due_date: null, // Temporariamente null até adicionarmos a coluna
+          created_at: task.created_at,
+          updated_at: task.updated_at
         })) as UserTask[];
         setTasks(tasksWithDueDate);
       }
@@ -66,7 +75,10 @@ export function useUserTasks() {
         .from('user_tasks')
         .insert({
           user_id: user.id,
-          ...task,
+          title: task.title,
+          description: task.description,
+          category: task.category,
+          verse: task.verse,
         })
         .select()
         .single();
@@ -76,11 +88,21 @@ export function useUserTasks() {
         return { error: error.message };
       }
 
-      // Garante que due_date existe
+      // Garantir que due_date seja incluído
       const taskWithDueDate = {
-        ...data,
-        due_date: data.due_date || null
+        id: data.id,
+        user_id: data.user_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        verse: data.verse,
+        completed: data.completed,
+        completed_at: data.completed_at,
+        due_date: task.due_date || null,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       } as UserTask;
+      
       setTasks(prev => [taskWithDueDate, ...prev]);
       return { data: taskWithDueDate };
     } catch (error) {
@@ -96,7 +118,12 @@ export function useUserTasks() {
       const { data, error } = await supabase
         .from('user_tasks')
         .update({
-          ...updates,
+          title: updates.title,
+          description: updates.description,
+          category: updates.category,
+          verse: updates.verse,
+          completed: updates.completed,
+          completed_at: updates.completed_at,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -109,11 +136,21 @@ export function useUserTasks() {
         return { error: error.message };
       }
 
-      // Garante que due_date existe
+      // Garantir que due_date seja incluído
       const taskWithDueDate = {
-        ...data,
-        due_date: data.due_date || null
+        id: data.id,
+        user_id: data.user_id,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        verse: data.verse,
+        completed: data.completed,
+        completed_at: data.completed_at,
+        due_date: updates.due_date || null,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       } as UserTask;
+      
       setTasks(prev => prev.map(task => task.id === id ? taskWithDueDate : task));
       return { data: taskWithDueDate };
     } catch (error) {
