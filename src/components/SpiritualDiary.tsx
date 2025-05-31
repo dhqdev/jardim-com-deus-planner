@@ -5,11 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar, Edit3, Star } from 'lucide-react';
 
-interface SpiritualDiaryProps {
-  currentTheme: string;
-}
-
-export const SpiritualDiary = ({ currentTheme }: SpiritualDiaryProps) => {
+export const SpiritualDiary = () => {
   const [todayEntry, setTodayEntry] = useState('');
   const [gratitudeEntry, setGratitudeEntry] = useState('');
   
