@@ -48,7 +48,7 @@ export function useUserTasks() {
         const tasksWithDueDate = (data || []).map(task => ({
           ...task,
           due_date: task.due_date || null
-        }));
+        })) as UserTask[];
         setTasks(tasksWithDueDate);
       }
     } catch (error) {
@@ -80,7 +80,7 @@ export function useUserTasks() {
       const taskWithDueDate = {
         ...data,
         due_date: data.due_date || null
-      };
+      } as UserTask;
       setTasks(prev => [taskWithDueDate, ...prev]);
       return { data: taskWithDueDate };
     } catch (error) {
@@ -113,7 +113,7 @@ export function useUserTasks() {
       const taskWithDueDate = {
         ...data,
         due_date: data.due_date || null
-      };
+      } as UserTask;
       setTasks(prev => prev.map(task => task.id === id ? taskWithDueDate : task));
       return { data: taskWithDueDate };
     } catch (error) {
