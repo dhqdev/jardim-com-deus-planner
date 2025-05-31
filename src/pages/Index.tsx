@@ -17,7 +17,6 @@ const Index = () => {
     if (!loading && !user) {
       navigate('/auth');
     } else if (user && !loading) {
-      // Show welcome modal only for first-time users
       const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
       if (!hasSeenWelcome) {
         setShowWelcome(true);
@@ -46,20 +45,24 @@ const Index = () => {
   }
 
   if (!user) {
-    return null; // Will redirect to auth
+    return null;
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br transition-all duration-1000 ${themes[currentTheme]}`}>
+    <div className={`min-h-screen bg-gradient-to-br transition-all duration-1000 ${themes[currentTheme]} flex flex-col`}>
       <BackgroundGarden theme={currentTheme} />
       
-      <div className="relative z-10">
+      {/* Fixed Header */}
+      <div className="sticky top-0 z-50">
         <GardenHeader currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />
-        
-        <main className="container mx-auto px-4 py-4 md:py-8">
-          <GardenTabs currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />
-        </main>
       </div>
+      
+      {/* Main Content */}
+      <main className="flex-1 relative z-10">
+        <div className="container mx-auto px-3 md:px-4 py-4 md:py-6">
+          <GardenTabs currentTheme={currentTheme} setCurrentTheme={setCurrentTheme} />
+        </div>
+      </main>
 
       {showWelcome && (
         <WelcomeModal onClose={handleWelcomeClose} />

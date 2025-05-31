@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +11,7 @@ export interface UserTask {
   verse: string | null;
   completed: boolean;
   completed_at: string | null;
+  due_date: string | null;
   created_at: string;
   updated_at: string;
 }
