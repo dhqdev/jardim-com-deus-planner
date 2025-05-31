@@ -6,6 +6,10 @@ import { BookOpen, Clock, Heart, ArrowLeft } from 'lucide-react';
 import { DevotionalContent } from '@/components/DevotionalContent';
 import { SpiritualFruitsTree } from '@/components/SpiritualFruitsTree';
 
+interface DevotionalTabProps {
+  currentTheme: string;
+}
+
 interface LocalDevotionalMode {
   id: string;
   duration: string;
@@ -15,7 +19,7 @@ interface LocalDevotionalMode {
   audioUrl: string;
 }
 
-export const DevotionalTab = () => {
+export const DevotionalTab = ({ currentTheme }: DevotionalTabProps) => {
   const [selectedDevotional, setSelectedDevotional] = useState<string | null>(null);
   
   const todaysVerse = {
