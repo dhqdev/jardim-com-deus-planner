@@ -13,84 +13,130 @@ export const DevotionalAudio = ({ audioUrl, title }: DevotionalAudioProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState([50]);
   const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const oscillatorsRef = useRef<OscillatorNode[]>([]);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
-  // Generate nature sounds programmatically
-  useEffect(() => {
-    if (!audioRef.current) return;
+  // Função para criar sons ambiente usando Web Audio API
+  const createAmbientSound = async () => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      }
 
-    // Create a simple ambient sound using Web Audio API
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
-    const createNatureSounds = () => {
-      // Create oscillators for different nature sounds
-      const oscillator1 = audioContext.createOscillator();
-      const oscillator2 = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      const audioContext = audioContextRef.current;
       
-      oscillator1.type = 'sine';
-      oscillator1.frequency.setValueAtTime(80, audioContext.currentTime);
-      oscillator2.type = 'triangle';
-      oscillator2.frequency.setValueAtTime(120, audioContext.currentTime);
-      
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      
-      oscillator1.connect(gainNode);
-      oscillator2.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      return { oscillator1, oscillator2, gainNode };
-    };
-
-    let audioNodes: any = null;
-
-    const handlePlay = () => {
       if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        await audioContext.resume();
       }
-      audioNodes = createNatureSounds();
-      audioNodes.oscillator1.start();
-      audioNodes.oscillator2.start();
-    };
 
-    const handlePause = () => {
-      if (audioNodes) {
-        audioNodes.oscillator1.stop();
-        audioNodes.oscillator2.stop();
-        audioNodes = null;
-      }
-    };
+      // Limpar osciladores existentes
+      stopAmbientSound();
 
-    if (isPlaying) {
-      handlePlay();
-    } else {
-      handlePause();
+      // Criar nós de áudio
+      const gainNode = audioContext.createGain();
+      const masterGain = audioContext.createGain();
+      
+      // Configurar volume principal
+      masterGain.gain.setValueAtTime((volume[0] / 100) * 0.1, audioContext.currentTime);
+      
+      // Criar múltiplos osciladores para um som mais rico
+      const frequencies = [80, 120, 160, 200, 240];
+      const oscillators: OscillatorNode[] = [];
+      
+      frequencies.forEach((freq, index) => {
+        const oscillator = audioContext.createOscillator();
+        const individualGain = audioContext.createGain();
+        
+        oscillator.type = index % 2 === 0 ? 'sine' : 'triangle';
+        oscillator.frequency.setValueAtTime(freq + Math.random() * 10, audioContext.currentTime);
+        
+        // Variação suave na amplitude
+        individualGain.gain.setValueAtTime(0.1 + Math.random() * 0.1, audioContext.currentTime);
+        
+        oscillator.connect(individualGain);
+        individualGain.connect(gainNode);
+        
+        oscillator.start();
+        oscillators.push(oscillator);
+      });
+      
+      gainNode.connect(masterGain);
+      masterGain.connect(audioContext.destination);
+      
+      oscillatorsRef.current = oscillators;
+      gainNodeRef.current = masterGain;
+      
+      // Adicionar modulação suave
+      const lfo = audioContext.createOscillator();
+      const lfoGain = audioContext.createGain();
+      
+      lfo.frequency.setValueAtTime(0.1, audioContext.currentTime);
+      lfoGain.gain.setValueAtTime(0.02, audioContext.currentTime);
+      
+      lfo.connect(lfoGain);
+      lfoGain.connect(gainNode.gain);
+      lfo.start();
+      
+      oscillators.push(lfo);
+      
+    } catch (error) {
+      console.error('Erro ao criar som ambiente:', error);
     }
+  };
 
-    return () => {
-      if (audioNodes) {
-        handlePause();
+  const stopAmbientSound = () => {
+    oscillatorsRef.current.forEach(oscillator => {
+      try {
+        oscillator.stop();
+      } catch (error) {
+        // Ignora erros se o oscilador já foi parado
       }
-    };
-  }, [isPlaying]);
+    });
+    oscillatorsRef.current = [];
+  };
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+  const togglePlayPause = async () => {
+    if (isPlaying) {
+      stopAmbientSound();
+      setIsPlaying(false);
+    } else {
+      await createAmbientSound();
+      setIsPlaying(true);
+    }
   };
 
   const handleVolumeChange = (newVolume: number[]) => {
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume[0] / 100;
+    if (gainNodeRef.current && audioContextRef.current) {
+      gainNodeRef.current.gain.setValueAtTime(
+        (newVolume[0] / 100) * 0.1,
+        audioContextRef.current.currentTime
+      );
     }
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    
+    if (gainNodeRef.current && audioContextRef.current) {
+      gainNodeRef.current.gain.setValueAtTime(
+        newMutedState ? 0 : (volume[0] / 100) * 0.1,
+        audioContextRef.current.currentTime
+      );
     }
   };
+
+  // Cleanup ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      stopAmbientSound();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
 
   return (
     <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-6">
@@ -143,13 +189,13 @@ export const DevotionalAudio = ({ audioUrl, title }: DevotionalAudioProps) => {
         </span>
       </div>
 
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        loop
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-      />
+      {isPlaying && (
+        <div className="mt-3 text-center">
+          <p className="text-xs text-green-600 italic">
+            🌿 Sons relaxantes da natureza tocando...
+          </p>
+        </div>
+      )}
     </div>
   );
 };
