@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,7 +44,12 @@ export function useUserTasks() {
       if (error) {
         console.error('Error fetching tasks:', error);
       } else {
-        setTasks(data || []);
+        // Garante que due_date existe nos dados retornados
+        const tasksWithDueDate = (data || []).map(task => ({
+          ...task,
+          due_date: task.due_date || null
+        }));
+        setTasks(tasksWithDueDate);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -70,8 +76,13 @@ export function useUserTasks() {
         return { error: error.message };
       }
 
-      setTasks(prev => [data, ...prev]);
-      return { data };
+      // Garante que due_date existe
+      const taskWithDueDate = {
+        ...data,
+        due_date: data.due_date || null
+      };
+      setTasks(prev => [taskWithDueDate, ...prev]);
+      return { data: taskWithDueDate };
     } catch (error) {
       console.error('Error:', error);
       return { error: 'Failed to create task' };
@@ -98,8 +109,13 @@ export function useUserTasks() {
         return { error: error.message };
       }
 
-      setTasks(prev => prev.map(task => task.id === id ? data : task));
-      return { data };
+      // Garante que due_date existe
+      const taskWithDueDate = {
+        ...data,
+        due_date: data.due_date || null
+      };
+      setTasks(prev => prev.map(task => task.id === id ? taskWithDueDate : task));
+      return { data: taskWithDueDate };
     } catch (error) {
       console.error('Error:', error);
       return { error: 'Failed to update task' };

@@ -8,7 +8,7 @@ interface Task {
   id: string;
   title: string;
   category: string;
-  status: 'seed' | 'sprout' | 'flower';
+  status: 'seed' | 'sprout' | 'flower' | 'mature';
   priority: 'low' | 'medium' | 'high';
   verse?: string;
   watered: boolean;

@@ -10,6 +10,16 @@ interface DevotionalTabProps {
   currentTheme: string;
 }
 
+interface DevotionalMode {
+  id: string;
+  duration: string;
+  title: string;
+  icon: string;
+  description: string;
+  audioUrl: string;
+  image?: string;
+}
+
 export const DevotionalTab = ({ currentTheme }: DevotionalTabProps) => {
   const [selectedDevotional, setSelectedDevotional] = useState<string | null>(null);
   
@@ -18,7 +28,7 @@ export const DevotionalTab = ({ currentTheme }: DevotionalTabProps) => {
     text: "Será como árvore plantada junto a ribeiros de águas, a qual dá o seu fruto na estação própria, e cujas folhas não carecem; e tudo quanto fizer prosperará."
   };
 
-  const devotionalModes = [
+  const devotionalModes: DevotionalMode[] = [
     { 
       id: 'breathe',
       duration: '3 min', 
