@@ -60,12 +60,21 @@ export const SpiritualDiary = ({ currentTheme }: SpiritualDiaryProps) => {
 
   // Carregar entrada de hoje se existir
   useEffect(() => {
-    const todayDate = new Date().toISOString().split('T')[0];
-    const todayEntry = entries.find(entry => entry.date === todayDate);
+    const todayString = new Date().toLocaleDateString('pt-BR');
+    const todayEntry = entries.find(entry => {
+      const entryDate = new Date(entry.created_at).toLocaleDateString('pt-BR');
+      return entryDate === todayString;
+    });
     
     if (todayEntry) {
-      setTodayReflections(todayEntry.reflections || '');
-      setTodayGratitude(todayEntry.gratitude || '');
+      const parts = todayEntry.content.split('\n\n');
+      parts.forEach(part => {
+        if (part.startsWith('**Reflexões:**')) {
+          setTodayReflections(part.replace('**Reflexões:**', '').trim());
+        } else if (part.startsWith('**Gratidão:**')) {
+          setTodayGratitude(part.replace('**Gratidão:**', '').trim());
+        }
+      });
     }
   }, [entries]);
 

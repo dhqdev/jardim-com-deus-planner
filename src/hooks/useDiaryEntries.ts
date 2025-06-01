@@ -6,10 +6,12 @@ import { useToast } from '@/hooks/use-toast';
 
 interface DiaryEntry {
   id: string;
-  reflections: string | null;
-  gratitude: string | null;
-  date: string;
+  content: string;
+  title: string;
+  mood: string | null;
   created_at: string;
+  updated_at: string | null;
+  user_id: string;
 }
 
 export const useDiaryEntries = () => {
@@ -27,7 +29,7 @@ export const useDiaryEntries = () => {
         .from('diary_entries')
         .select('*')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setEntries(data || []);
@@ -48,18 +50,19 @@ export const useDiaryEntries = () => {
 
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('pt-BR');
+      
+      // Combinar reflexões e gratidão em um conteúdo único
+      const content = `**Reflexões:** ${reflections}\n\n**Gratidão:** ${gratitude}`;
       
       const { error } = await supabase
         .from('diary_entries')
         .upsert({
           user_id: user.id,
-          reflections: reflections.trim() || null,
-          gratitude: gratitude.trim() || null,
-          date: today,
+          title: `Diário - ${today}`,
+          content: content,
+          mood: 'grateful',
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,date'
         });
 
       if (error) throw error;

@@ -5,10 +5,12 @@ import { Star, Flower, TreePine, Sparkles } from 'lucide-react';
 
 interface DiaryEntry {
   id: string;
-  reflections: string | null;
-  gratitude: string | null;
-  date: string;
+  content: string;
+  title: string;
+  mood: string | null;
   created_at: string;
+  updated_at: string | null;
+  user_id: string;
 }
 
 interface DiaryTrailProps {
@@ -71,6 +73,22 @@ export const DiaryTrail = ({ entries, currentTheme }: DiaryTrailProps) => {
     return <IconComponent className="w-5 h-5" />;
   };
 
+  const parseContent = (content: string) => {
+    const parts = content.split('\n\n');
+    let reflections = '';
+    let gratitude = '';
+    
+    parts.forEach(part => {
+      if (part.startsWith('**Reflexões:**')) {
+        reflections = part.replace('**Reflexões:**', '').trim();
+      } else if (part.startsWith('**Gratidão:**')) {
+        gratitude = part.replace('**Gratidão:**', '').trim();
+      }
+    });
+    
+    return { reflections, gratitude };
+  };
+
   if (entries.length === 0) {
     return (
       <div className={`text-center p-8 ${colors.text}`}>
@@ -87,47 +105,51 @@ export const DiaryTrail = ({ entries, currentTheme }: DiaryTrailProps) => {
       <div className={`absolute left-8 top-0 bottom-0 w-1 ${colors.trail} opacity-30 rounded-full`} />
       
       <div className="space-y-6">
-        {entries.map((entry, index) => (
-          <div key={entry.id} className="relative flex items-start space-x-6">
-            {/* Ícone da trilha */}
-            <div className={`flex-shrink-0 w-16 h-16 ${colors.bg} backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/30 shadow-lg relative z-10`}>
-              <div className={colors.accent}>
-                {getTrailIcon(index)}
-              </div>
-            </div>
-            
-            {/* Conteúdo da entrada */}
-            <Card className={`flex-1 ${colors.bg} backdrop-blur-sm border-white/30 p-6 shadow-lg`}>
-              <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm font-semibold ${colors.accent} capitalize`}>
-                  {formatDate(entry.date)}
-                </span>
-                <span className={`text-xs ${colors.date}`}>
-                  {index === 0 ? 'Mais recente' : `${index + 1}ª entrada`}
-                </span>
-              </div>
-              
-              {entry.reflections && (
-                <div className="mb-4">
-                  <p className={`${colors.text} text-sm leading-relaxed`}>
-                    {entry.reflections}
-                  </p>
+        {entries.map((entry, index) => {
+          const { reflections, gratitude } = parseContent(entry.content);
+          
+          return (
+            <div key={entry.id} className="relative flex items-start space-x-6">
+              {/* Ícone da trilha */}
+              <div className={`flex-shrink-0 w-16 h-16 ${colors.bg} backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/30 shadow-lg relative z-10`}>
+                <div className={colors.accent}>
+                  {getTrailIcon(index)}
                 </div>
-              )}
+              </div>
               
-              {entry.gratitude && (
-                <div className={`mt-3 pt-3 border-t border-white/20`}>
-                  <div className="flex items-start space-x-2">
-                    <Star className={`w-4 h-4 ${colors.accent} flex-shrink-0 mt-0.5`} />
-                    <p className={`text-xs ${colors.accent} leading-relaxed`}>
-                      {entry.gratitude}
+              {/* Conteúdo da entrada */}
+              <Card className={`flex-1 ${colors.bg} backdrop-blur-sm border-white/30 p-6 shadow-lg`}>
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-sm font-semibold ${colors.accent} capitalize`}>
+                    {formatDate(entry.created_at)}
+                  </span>
+                  <span className={`text-xs ${colors.date}`}>
+                    {index === 0 ? 'Mais recente' : `${index + 1}ª entrada`}
+                  </span>
+                </div>
+                
+                {reflections && (
+                  <div className="mb-4">
+                    <p className={`${colors.text} text-sm leading-relaxed`}>
+                      {reflections}
                     </p>
                   </div>
-                </div>
-              )}
-            </Card>
-          </div>
-        ))}
+                )}
+                
+                {gratitude && (
+                  <div className={`mt-3 pt-3 border-t border-white/20`}>
+                    <div className="flex items-start space-x-2">
+                      <Star className={`w-4 h-4 ${colors.accent} flex-shrink-0 mt-0.5`} />
+                      <p className={`text-xs ${colors.accent} leading-relaxed`}>
+                        {gratitude}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </div>
+          );
+        })}
       </div>
       
       {/* Final da trilha */}
