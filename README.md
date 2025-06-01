@@ -1,69 +1,35 @@
-**URL**: https://lovable.dev/projects/ab2a6412-2ca8-4c95-bff6-8399290c637f
+**URL**: https://planejamento-com-deus.lovable.app/auth
 
-## How can I edit this code?
+✨ Sobre o Projeto
+Este aplicativo nasceu do desejo de criar um espaço digital onde cristãos pudessem se aproximar mais de Deus, mesmo em meio à correria do dia a dia. Com o Conecta Fé, qualquer pessoa pode registrar seus pedidos de oração, anotar seus devocionais diários, e construir uma jornada de fé mais firme e constante.
 
-There are several ways of editing your application.
+Não é apenas um app – é um lugar de encontro com Deus. Um cantinho no celular onde a alma encontra descanso, direcionamento e força para continuar.
 
-**Use Lovable**
+🛠 Funcionalidades
+✍️ Cadastro de pedidos de oração
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ab2a6412-2ca8-4c95-bff6-8399290c637f) and start prompting.
+📖 Espaço para anotações devocionais
 
-Changes made via Lovable will be committed automatically to this repo.
+📅 Registro diário para manter uma rotina de comunhão
 
-**Use your preferred IDE**
+💬 Mural comunitário opcional (para que amigos possam orar uns pelos outros)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🔔 Notificações para lembrar você de ter um momento com Deus
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+📖 Versículo do dia (com base na Palavra de Deus)
 
-Follow these steps:
+🎯 Propósito
+Num mundo cada vez mais barulhento e corrido, o Conecta Fé é um lembrete silencioso de que a oração ainda move montanhas e que a Palavra ainda transforma corações.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+"Transformar a tecnologia em ponte e não em barreira para a espiritualidade."
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+💡 Visão Futurista
+Em breve, queremos implementar:
 
-# Step 3: Install the necessary dependencies.
-npm i
+Compartilhamento de pedidos com grupos de oração
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+Devocionais em áudio (para ouvir no caminho da faculdade ou do trabalho)
 
-**Edit a file directly in GitHub**
+Temas personalizados com versículos inspiradores
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/ab2a6412-2ca8-4c95-bff6-8399290c637f) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Estatísticas de crescimento espiritual (porque evolução espiritual também é progresso 💪✨)
