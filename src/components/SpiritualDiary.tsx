@@ -1,17 +1,20 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar, Edit3, Star } from 'lucide-react';
+import { DiaryTrail } from '@/components/DiaryTrail';
+import { useDiaryEntries } from '@/hooks/useDiaryEntries';
 
 interface SpiritualDiaryProps {
   currentTheme: string;
 }
 
 export const SpiritualDiary = ({ currentTheme }: SpiritualDiaryProps) => {
-  const [todayEntry, setTodayEntry] = useState('');
-  const [gratitudeEntry, setGratitudeEntry] = useState('');
+  const [todayReflections, setTodayReflections] = useState('');
+  const [todayGratitude, setTodayGratitude] = useState('');
+  const { entries, loading, saveEntry } = useDiaryEntries();
   
   const today = new Date().toLocaleDateString('pt-BR', { 
     weekday: 'long', 
@@ -20,23 +23,77 @@ export const SpiritualDiary = ({ currentTheme }: SpiritualDiaryProps) => {
     day: 'numeric' 
   });
 
+  const getThemeColors = () => {
+    switch (currentTheme) {
+      case 'night':
+        return {
+          text: 'text-blue-200',
+          accent: 'text-purple-300',
+          label: 'text-blue-300',
+          bg: 'bg-indigo-800/30'
+        };
+      case 'desert':
+        return {
+          text: 'text-orange-800',
+          accent: 'text-amber-600',
+          label: 'text-orange-700',
+          bg: 'bg-orange-200/40'
+        };
+      case 'gratitude':
+        return {
+          text: 'text-pink-800',
+          accent: 'text-rose-600',
+          label: 'text-pink-700',
+          bg: 'bg-pink-200/40'
+        };
+      default:
+        return {
+          text: 'text-green-800',
+          accent: 'text-green-600',
+          label: 'text-green-700',
+          bg: 'bg-white/40'
+        };
+    }
+  };
+
+  const colors = getThemeColors();
+
+  // Carregar entrada de hoje se existir
+  useEffect(() => {
+    const todayDate = new Date().toISOString().split('T')[0];
+    const todayEntry = entries.find(entry => entry.date === todayDate);
+    
+    if (todayEntry) {
+      setTodayReflections(todayEntry.reflections || '');
+      setTodayGratitude(todayEntry.gratitude || '');
+    }
+  }, [entries]);
+
+  const handleSave = async () => {
+    if (!todayReflections.trim() && !todayGratitude.trim()) {
+      return;
+    }
+    
+    await saveEntry(todayReflections, todayGratitude);
+  };
+
   return (
     <div className="space-y-6">
       {/* Today's Entry */}
-      <Card className="bg-white/30 backdrop-blur-sm border-white/40 p-8">
+      <Card className={`${colors.bg} backdrop-blur-sm border-white/40 p-8`}>
         <div className="flex items-center space-x-3 mb-6">
-          <Calendar className="w-6 h-6 text-green-700" />
-          <h3 className="text-2xl font-bold text-green-800 capitalize">{today}</h3>
+          <Calendar className={`w-6 h-6 ${colors.accent}`} />
+          <h3 className={`text-2xl font-bold ${colors.text} capitalize`}>{today}</h3>
         </div>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-green-700 mb-2">
+            <label className={`block text-sm font-semibold ${colors.label} mb-2`}>
               Reflexões e Conversas com Deus
             </label>
             <Textarea
-              value={todayEntry}
-              onChange={(e) => setTodayEntry(e.target.value)}
+              value={todayReflections}
+              onChange={(e) => setTodayReflections(e.target.value)}
               placeholder="Como você sentiu a presença de Deus hoje? O que Ele tem falado ao seu coração?"
               rows={6}
               className="bg-white/50 border-green-200"
@@ -44,61 +101,37 @@ export const SpiritualDiary = ({ currentTheme }: SpiritualDiaryProps) => {
           </div>
           
           <div>
-            <label className="block text-sm font-semibold text-green-700 mb-2">
+            <label className={`block text-sm font-semibold ${colors.label} mb-2`}>
               <Star className="w-4 h-4 inline mr-1" />
               Gratidão de Hoje
             </label>
             <Textarea
-              value={gratitudeEntry}
-              onChange={(e) => setGratitudeEntry(e.target.value)}
+              value={todayGratitude}
+              onChange={(e) => setTodayGratitude(e.target.value)}
               placeholder="Pelo que você é grato a Deus hoje?"
               rows={3}
               className="bg-white/50 border-green-200"
             />
           </div>
           
-          <Button className="bg-green-600 hover:bg-green-700">
+          <Button 
+            onClick={handleSave}
+            disabled={loading || (!todayReflections.trim() && !todayGratitude.trim())}
+            className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+          >
             <Edit3 className="w-4 h-4 mr-2" />
-            Salvar no Jardim
+            {loading ? 'Salvando...' : 'Salvar no Jardim'}
           </Button>
         </div>
       </Card>
 
-      {/* Previous Entries */}
-      <Card className="bg-white/30 backdrop-blur-sm border-white/40 p-8">
-        <h3 className="text-xl font-bold text-green-800 mb-6">
-          Memórias do Jardim
+      {/* Memories Trail */}
+      <Card className={`${colors.bg} backdrop-blur-sm border-white/40 p-8`}>
+        <h3 className={`text-xl font-bold ${colors.text} mb-6`}>
+          Trilha das Memórias do Jardim
         </h3>
         
-        <div className="space-y-4">
-          <div className="bg-white/40 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-green-700">29 de Maio, 2024</span>
-              <span className="text-xs text-green-600">Terça-feira</span>
-            </div>
-            <p className="text-green-800 text-sm">
-              Hoje senti muito a paz de Deus durante minha oração matinal. Ele me lembrou que não preciso me preocupar com o amanhã...
-            </p>
-            <div className="mt-2 text-xs text-green-600">
-              <Star className="w-3 h-3 inline mr-1" />
-              Grata pela saúde da família e pelo novo emprego
-            </div>
-          </div>
-          
-          <div className="bg-white/40 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold text-green-700">28 de Maio, 2024</span>
-              <span className="text-xs text-green-600">Segunda-feira</span>
-            </div>
-            <p className="text-green-800 text-sm">
-              Um dia desafiador, mas Deus me deu forças. Lembrei do versículo de Filipenses 4:13...
-            </p>
-            <div className="mt-2 text-xs text-green-600">
-              <Star className="w-3 h-3 inline mr-1" />
-              Grata pela força para enfrentar os desafios
-            </div>
-          </div>
-        </div>
+        <DiaryTrail entries={entries} currentTheme={currentTheme} />
       </Card>
     </div>
   );
