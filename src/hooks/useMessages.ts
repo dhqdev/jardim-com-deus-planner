@@ -36,31 +36,43 @@ export const useMessages = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
-        .select(`
-          sender_id,
-          receiver_id,
-          content,
-          created_at,
-          read_at,
-          profiles!messages_sender_id_fkey(id, name),
-          profiles!messages_receiver_id_fkey(id, name)
-        `)
+        .select('*')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (messagesError) throw messagesError;
+
+      if (!messagesData || messagesData.length === 0) {
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
+
+      // Obter IDs únicos dos amigos
+      const friendIds = Array.from(new Set(
+        messagesData.map(message => 
+          message.sender_id === user.id ? message.receiver_id : message.sender_id
+        )
+      ));
+
+      // Buscar dados dos perfis
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', friendIds);
+
+      if (profilesError) throw profilesError;
 
       // Agrupar mensagens por conversa
       const conversationMap = new Map<string, Conversation>();
       
-      data?.forEach(message => {
+      messagesData.forEach(message => {
         const isCurrentUserSender = message.sender_id === user.id;
         const friendId = isCurrentUserSender ? message.receiver_id : message.sender_id;
-        const friendName = isCurrentUserSender 
-          ? message.profiles[1]?.name || 'Usuário'
-          : message.profiles[0]?.name || 'Usuário';
+        const friendProfile = profilesData?.find(profile => profile.id === friendId);
+        const friendName = friendProfile?.name || 'Usuário';
 
         if (!conversationMap.has(friendId)) {
           conversationMap.set(friendId, {
@@ -96,21 +108,31 @@ export const useMessages = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
-        .select(`
-          *,
-          profiles!messages_sender_id_fkey(name)
-        `)
+        .select('*')
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (messagesError) throw messagesError;
 
-      const messages = data?.map(msg => ({
+      if (!messagesData) {
+        setCurrentMessages([]);
+        return;
+      }
+
+      // Buscar nomes dos remetentes
+      const senderIds = Array.from(new Set(messagesData.map(msg => msg.sender_id)));
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', senderIds);
+
+      const messages = messagesData.map(msg => ({
         ...msg,
-        sender_name: msg.profiles?.name || 'Usuário'
-      })) || [];
+        message_type: msg.message_type as 'text' | 'prayer_request' | 'prayer_response',
+        sender_name: profilesData?.find(p => p.id === msg.sender_id)?.name || 'Usuário'
+      }));
 
       setCurrentMessages(messages);
 
