@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from './useNotifications';
 
 interface Message {
   id: string;
@@ -13,7 +13,6 @@ interface Message {
   created_at: string;
   read_at: string | null;
   prayer_id: string | null;
-  image_url: string | null;
   sender_name?: string;
 }
 
@@ -28,7 +27,6 @@ interface Conversation {
 export const useMessages = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { createNotification } = useNotifications();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentMessages, setCurrentMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -38,43 +36,31 @@ export const useMessages = () => {
     
     setLoading(true);
     try {
-      const { data: messagesData, error: messagesError } = await supabase
+      const { data, error } = await supabase
         .from('messages')
-        .select('*')
+        .select(`
+          sender_id,
+          receiver_id,
+          content,
+          created_at,
+          read_at,
+          profiles!messages_sender_id_fkey(id, name),
+          profiles!messages_receiver_id_fkey(id, name)
+        `)
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
-      if (messagesError) throw messagesError;
-
-      if (!messagesData || messagesData.length === 0) {
-        setConversations([]);
-        setLoading(false);
-        return;
-      }
-
-      // Obter IDs únicos dos amigos
-      const friendIds = Array.from(new Set(
-        messagesData.map(message => 
-          message.sender_id === user.id ? message.receiver_id : message.sender_id
-        )
-      ));
-
-      // Buscar dados dos perfis
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', friendIds);
-
-      if (profilesError) throw profilesError;
+      if (error) throw error;
 
       // Agrupar mensagens por conversa
       const conversationMap = new Map<string, Conversation>();
       
-      messagesData.forEach(message => {
+      data?.forEach(message => {
         const isCurrentUserSender = message.sender_id === user.id;
         const friendId = isCurrentUserSender ? message.receiver_id : message.sender_id;
-        const friendProfile = profilesData?.find(profile => profile.id === friendId);
-        const friendName = friendProfile?.name || 'Usuário';
+        const friendName = isCurrentUserSender 
+          ? message.profiles[1]?.name || 'Usuário'
+          : message.profiles[0]?.name || 'Usuário';
 
         if (!conversationMap.has(friendId)) {
           conversationMap.set(friendId, {
@@ -110,31 +96,21 @@ export const useMessages = () => {
     if (!user) return;
     
     try {
-      const { data: messagesData, error: messagesError } = await supabase
+      const { data, error } = await supabase
         .from('messages')
-        .select('*')
+        .select(`
+          *,
+          profiles!messages_sender_id_fkey(name)
+        `)
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
         .order('created_at', { ascending: true });
 
-      if (messagesError) throw messagesError;
+      if (error) throw error;
 
-      if (!messagesData) {
-        setCurrentMessages([]);
-        return;
-      }
-
-      // Buscar nomes dos remetentes
-      const senderIds = Array.from(new Set(messagesData.map(msg => msg.sender_id)));
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', senderIds);
-
-      const messages = messagesData.map(msg => ({
+      const messages = data?.map(msg => ({
         ...msg,
-        message_type: msg.message_type as 'text' | 'prayer_request' | 'prayer_response',
-        sender_name: profilesData?.find(p => p.id === msg.sender_id)?.name || 'Usuário'
-      }));
+        sender_name: msg.profiles?.name || 'Usuário'
+      })) || [];
 
       setCurrentMessages(messages);
 
@@ -150,51 +126,10 @@ export const useMessages = () => {
     }
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('chat-images')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('chat-images')
-        .getPublicUrl(fileName);
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar a imagem",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const sendMessage = async (
-    receiverId: string, 
-    content: string, 
-    messageType: 'text' | 'prayer_request' | 'prayer_response' = 'text', 
-    prayerId?: string,
-    imageFile?: File
-  ) => {
+  const sendMessage = async (receiverId: string, content: string, messageType: 'text' | 'prayer_request' | 'prayer_response' = 'text', prayerId?: string) => {
     if (!user) return false;
 
     try {
-      let imageUrl = null;
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-        if (!imageUrl) return false; // Se falhou upload, não envia mensagem
-      }
-
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -202,20 +137,10 @@ export const useMessages = () => {
           receiver_id: receiverId,
           content,
           message_type: messageType,
-          prayer_id: prayerId,
-          image_url: imageUrl
+          prayer_id: prayerId
         });
 
       if (error) throw error;
-
-      // Criar notificação para o destinatário
-      await createNotification(
-        receiverId,
-        'message',
-        'Nova mensagem',
-        `Você recebeu uma nova mensagem`,
-        user.id
-      );
 
       // Recarregar mensagens
       fetchMessages(receiverId);
@@ -287,7 +212,6 @@ export const useMessages = () => {
     loading,
     sendMessage,
     fetchMessages,
-    uploadImage,
     refetch: fetchConversations
   };
 };

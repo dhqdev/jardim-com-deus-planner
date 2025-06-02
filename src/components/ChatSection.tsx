@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Send, ArrowLeft, Paperclip, Image as ImageIcon } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { useFriendships } from '@/hooks/useFriendships';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,9 +17,7 @@ export const ChatSection = ({ currentTheme }: ChatSectionProps) => {
   const { user } = useAuth();
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { conversations, currentMessages, sendMessage, fetchMessages } = useMessages();
   const { friends } = useFriendships();
@@ -64,19 +62,11 @@ export const ChatSection = ({ currentTheme }: ChatSectionProps) => {
   }, [currentMessages]);
 
   const handleSendMessage = async () => {
-    if ((!newMessage.trim() && !selectedImage) || !selectedFriend) return;
+    if (!newMessage.trim() || !selectedFriend) return;
     
-    const success = await sendMessage(selectedFriend, newMessage, 'text', undefined, selectedImage || undefined);
+    const success = await sendMessage(selectedFriend, newMessage);
     if (success) {
       setNewMessage('');
-      setSelectedImage(null);
-    }
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      setSelectedImage(file);
     }
   };
 
@@ -116,84 +106,33 @@ export const ChatSection = ({ currentTheme }: ChatSectionProps) => {
         </div>
 
         {/* Mensagens */}
-        <div className="flex-1 overflow-y-auto space-y-4 mb-4 px-2">
-          {currentMessages.map((message) => {
-            const isCurrentUser = message.sender_id === user?.id;
-            
-            return (
+        <div className="flex-1 overflow-y-auto space-y-3 mb-4">
+          {currentMessages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+            >
               <div
-                key={message.id}
-                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                className={`max-w-xs px-4 py-2 rounded-lg ${
+                  message.sender_id === user?.id
+                    ? 'bg-green-600 text-white'
+                    : 'bg-white/50 text-gray-800'
+                }`}
               >
-                <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                    isCurrentUser
-                      ? 'bg-green-600 text-white rounded-br-md'
-                      : 'bg-white/70 text-gray-800 rounded-bl-md'
-                  } shadow-sm`}
-                >
-                  {message.image_url && (
-                    <div className="mb-2">
-                      <img 
-                        src={message.image_url} 
-                        alt="Imagem enviada" 
-                        className="rounded-lg max-w-full h-auto"
-                        style={{ maxHeight: '200px' }}
-                      />
-                    </div>
-                  )}
-                  {message.content && (
-                    <p className="break-words">{message.content}</p>
-                  )}
-                  <p className={`text-xs mt-2 ${
-                    isCurrentUser ? 'text-green-100' : 'text-gray-500'
-                  }`}>
-                    {formatTime(message.created_at)}
-                  </p>
-                </div>
+                <p>{message.content}</p>
+                <p className={`text-xs mt-1 ${
+                  message.sender_id === user?.id ? 'text-green-100' : 'text-gray-500'
+                }`}>
+                  {formatTime(message.created_at)}
+                </p>
               </div>
-            );
-          })}
+            </div>
+          ))}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Preview da imagem selecionada */}
-        {selectedImage && (
-          <div className="mb-4 p-3 bg-white/50 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <ImageIcon className="w-4 h-4" />
-                <span className="text-sm text-gray-700">{selectedImage.name}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedImage(null)}
-                className="h-6 w-6 p-0"
-              >
-                ×
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Input de Mensagem */}
         <div className="flex space-x-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageSelect}
-            accept="image/*"
-            className="hidden"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-shrink-0"
-          >
-            <Paperclip className="w-4 h-4" />
-          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -203,8 +142,8 @@ export const ChatSection = ({ currentTheme }: ChatSectionProps) => {
           />
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim() && !selectedImage}
-            className="bg-green-600 hover:bg-green-700 flex-shrink-0"
+            disabled={!newMessage.trim()}
+            className="bg-green-600 hover:bg-green-700"
           >
             <Send className="w-4 h-4" />
           </Button>

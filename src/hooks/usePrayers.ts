@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useNotifications } from './useNotifications';
 
 interface Prayer {
   id: string;
@@ -18,10 +18,18 @@ interface Prayer {
   is_supporting?: boolean;
 }
 
+interface PrayerSupport {
+  id: string;
+  prayer_id: string;
+  supporter_id: string;
+  message: string | null;
+  created_at: string;
+  supporter_name?: string;
+}
+
 export const usePrayers = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { createNotification } = useNotifications();
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [myPrayers, setMyPrayers] = useState<Prayer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,47 +39,25 @@ export const usePrayers = () => {
     
     setLoading(true);
     try {
-      // Buscar orações públicas não respondidas
-      const { data: prayersData, error: prayersError } = await supabase
+      const { data, error } = await supabase
         .from('prayers')
-        .select('*')
+        .select(`
+          *,
+          profiles(name),
+          prayer_support(id, supporter_id)
+        `)
         .eq('is_private', false)
         .eq('is_answered', false)
         .order('created_at', { ascending: false });
 
-      if (prayersError) throw prayersError;
+      if (error) throw error;
 
-      if (!prayersData || prayersData.length === 0) {
-        setPrayers([]);
-        setLoading(false);
-        return;
-      }
-
-      // Buscar dados dos usuários
-      const userIds = Array.from(new Set(prayersData.map(prayer => prayer.user_id)));
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', userIds);
-
-      // Buscar suporte de orações
-      const prayerIds = prayersData.map(prayer => prayer.id);
-      const { data: supportData } = await supabase
-        .from('prayer_support')
-        .select('*')
-        .in('prayer_id', prayerIds);
-
-      const prayersWithSupport = prayersData.map(prayer => {
-        const userProfile = profilesData?.find(profile => profile.id === prayer.user_id);
-        const prayerSupports = supportData?.filter(support => support.prayer_id === prayer.id) || [];
-        
-        return {
-          ...prayer,
-          user_name: userProfile?.name || 'Usuário',
-          supporters_count: prayerSupports.length,
-          is_supporting: prayerSupports.some(support => support.supporter_id === user.id)
-        };
-      });
+      const prayersWithSupport = data?.map(prayer => ({
+        ...prayer,
+        user_name: prayer.profiles?.name || 'Usuário',
+        supporters_count: prayer.prayer_support?.length || 0,
+        is_supporting: prayer.prayer_support?.some(support => support.supporter_id === user.id) || false
+      })) || [];
 
       setPrayers(prayersWithSupport);
     } catch (error) {
@@ -90,30 +76,21 @@ export const usePrayers = () => {
     if (!user) return;
     
     try {
-      const { data: myPrayersData, error: myPrayersError } = await supabase
+      const { data, error } = await supabase
         .from('prayers')
-        .select('*')
+        .select(`
+          *,
+          prayer_support(id, supporter_id, profiles(name))
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (myPrayersError) throw myPrayersError;
+      if (error) throw error;
 
-      if (!myPrayersData) {
-        setMyPrayers([]);
-        return;
-      }
-
-      // Buscar suporte para as minhas orações
-      const prayerIds = myPrayersData.map(prayer => prayer.id);
-      const { data: supportData } = await supabase
-        .from('prayer_support')
-        .select('*')
-        .in('prayer_id', prayerIds);
-
-      const myPrayersWithSupport = myPrayersData.map(prayer => ({
+      const myPrayersWithSupport = data?.map(prayer => ({
         ...prayer,
-        supporters_count: supportData?.filter(support => support.prayer_id === prayer.id).length || 0
-      }));
+        supporters_count: prayer.prayer_support?.length || 0
+      })) || [];
 
       setMyPrayers(myPrayersWithSupport);
     } catch (error) {
@@ -159,22 +136,6 @@ export const usePrayers = () => {
     if (!user) return false;
 
     try {
-      // Verificar se já está orando por esta oração
-      const { data: existingSupport } = await supabase
-        .from('prayer_support')
-        .select('id')
-        .eq('prayer_id', prayerId)
-        .eq('supporter_id', user.id)
-        .single();
-
-      if (existingSupport) {
-        toast({
-          title: "Você já está orando",
-          description: "Você já marcou que está orando por esta pessoa 🙏",
-        });
-        return false;
-      }
-
       const { error } = await supabase
         .from('prayer_support')
         .insert({
@@ -184,23 +145,6 @@ export const usePrayers = () => {
         });
 
       if (error) throw error;
-
-      // Buscar dados da oração para criar notificação
-      const { data: prayerData } = await supabase
-        .from('prayers')
-        .select('user_id, title')
-        .eq('id', prayerId)
-        .single();
-
-      if (prayerData && prayerData.user_id !== user.id) {
-        await createNotification(
-          prayerData.user_id,
-          'prayer_support',
-          'Alguém está orando por você!',
-          `Alguém está orando pelo seu pedido: "${prayerData.title}"`,
-          prayerId
-        );
-      }
 
       toast({
         title: "Oração apoiada!",
