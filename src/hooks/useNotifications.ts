@@ -58,7 +58,6 @@ export const useNotifications = () => {
 
       const notificationsWithUserNames = notificationsData.map(notification => ({
         ...notification,
-        type: notification.type as 'message' | 'prayer_support' | 'friend_request',
         from_user_name: profilesData?.find(p => p.id === notification.from_user_id)?.name || 'Usuário'
       }));
 
