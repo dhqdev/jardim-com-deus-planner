@@ -26,37 +26,48 @@ export const useFriendships = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Buscar amizades aceitas
+      const { data: friendshipsData, error: friendshipsError } = await supabase
         .from('friendships')
-        .select(`
-          id,
-          status,
-          user_id,
-          friend_id,
-          profiles!friendships_friend_id_fkey(id, name, email, church),
-          profiles!friendships_user_id_fkey(id, name, email, church)
-        `)
+        .select('*')
         .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
         .eq('status', 'accepted');
 
-      if (error) throw error;
+      if (friendshipsError) throw friendshipsError;
 
-      const friendsList = data?.map(friendship => {
+      if (!friendshipsData || friendshipsData.length === 0) {
+        setFriends([]);
+        setLoading(false);
+        return;
+      }
+
+      // Buscar dados dos perfis dos amigos
+      const friendIds = friendshipsData.map(friendship => 
+        friendship.user_id === user.id ? friendship.friend_id : friendship.user_id
+      );
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', friendIds);
+
+      if (profilesError) throw profilesError;
+
+      const friendsList = friendshipsData.map(friendship => {
         const isSender = friendship.user_id === user.id;
-        const friendProfile = isSender 
-          ? friendship.profiles[0] 
-          : friendship.profiles[1];
+        const friendId = isSender ? friendship.friend_id : friendship.user_id;
+        const friendProfile = profilesData?.find(profile => profile.id === friendId);
         
         return {
-          id: friendProfile.id,
-          name: friendProfile.name || 'Usuário',
-          email: friendProfile.email || '',
-          church: friendProfile.church,
+          id: friendId,
+          name: friendProfile?.name || 'Usuário',
+          email: friendProfile?.email || '',
+          church: friendProfile?.church,
           status: friendship.status as 'accepted',
           friendship_id: friendship.id,
           is_sender: isSender
         };
-      }) || [];
+      });
 
       setFriends(friendsList);
     } catch (error) {
@@ -75,29 +86,43 @@ export const useFriendships = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      // Buscar solicitações pendentes onde o usuário atual é o receptor
+      const { data: requestsData, error: requestsError } = await supabase
         .from('friendships')
-        .select(`
-          id,
-          status,
-          user_id,
-          friend_id,
-          profiles!friendships_user_id_fkey(id, name, email, church)
-        `)
+        .select('*')
         .eq('friend_id', user.id)
         .eq('status', 'pending');
 
-      if (error) throw error;
+      if (requestsError) throw requestsError;
 
-      const requests = data?.map(friendship => ({
-        id: friendship.profiles.id,
-        name: friendship.profiles.name || 'Usuário',
-        email: friendship.profiles.email || '',
-        church: friendship.profiles.church,
-        status: friendship.status as 'pending',
-        friendship_id: friendship.id,
-        is_sender: false
-      })) || [];
+      if (!requestsData || requestsData.length === 0) {
+        setPendingRequests([]);
+        return;
+      }
+
+      // Buscar dados dos perfis dos remetentes
+      const senderIds = requestsData.map(request => request.user_id);
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', senderIds);
+
+      if (profilesError) throw profilesError;
+
+      const requests = requestsData.map(request => {
+        const senderProfile = profilesData?.find(profile => profile.id === request.user_id);
+        
+        return {
+          id: request.user_id,
+          name: senderProfile?.name || 'Usuário',
+          email: senderProfile?.email || '',
+          church: senderProfile?.church,
+          status: request.status as 'pending',
+          friendship_id: request.id,
+          is_sender: false
+        };
+      });
 
       setPendingRequests(requests);
     } catch (error) {

@@ -18,15 +18,6 @@ interface Prayer {
   is_supporting?: boolean;
 }
 
-interface PrayerSupport {
-  id: string;
-  prayer_id: string;
-  supporter_id: string;
-  message: string | null;
-  created_at: string;
-  supporter_name?: string;
-}
-
 export const usePrayers = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -39,25 +30,47 @@ export const usePrayers = () => {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Buscar orações públicas não respondidas
+      const { data: prayersData, error: prayersError } = await supabase
         .from('prayers')
-        .select(`
-          *,
-          profiles(name),
-          prayer_support(id, supporter_id)
-        `)
+        .select('*')
         .eq('is_private', false)
         .eq('is_answered', false)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (prayersError) throw prayersError;
 
-      const prayersWithSupport = data?.map(prayer => ({
-        ...prayer,
-        user_name: prayer.profiles?.name || 'Usuário',
-        supporters_count: prayer.prayer_support?.length || 0,
-        is_supporting: prayer.prayer_support?.some(support => support.supporter_id === user.id) || false
-      })) || [];
+      if (!prayersData || prayersData.length === 0) {
+        setPrayers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Buscar dados dos usuários
+      const userIds = Array.from(new Set(prayersData.map(prayer => prayer.user_id)));
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+
+      // Buscar suporte de orações
+      const prayerIds = prayersData.map(prayer => prayer.id);
+      const { data: supportData } = await supabase
+        .from('prayer_support')
+        .select('*')
+        .in('prayer_id', prayerIds);
+
+      const prayersWithSupport = prayersData.map(prayer => {
+        const userProfile = profilesData?.find(profile => profile.id === prayer.user_id);
+        const prayerSupports = supportData?.filter(support => support.prayer_id === prayer.id) || [];
+        
+        return {
+          ...prayer,
+          user_name: userProfile?.name || 'Usuário',
+          supporters_count: prayerSupports.length,
+          is_supporting: prayerSupports.some(support => support.supporter_id === user.id)
+        };
+      });
 
       setPrayers(prayersWithSupport);
     } catch (error) {
@@ -76,21 +89,30 @@ export const usePrayers = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data: myPrayersData, error: myPrayersError } = await supabase
         .from('prayers')
-        .select(`
-          *,
-          prayer_support(id, supporter_id, profiles(name))
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (myPrayersError) throw myPrayersError;
 
-      const myPrayersWithSupport = data?.map(prayer => ({
+      if (!myPrayersData) {
+        setMyPrayers([]);
+        return;
+      }
+
+      // Buscar suporte para as minhas orações
+      const prayerIds = myPrayersData.map(prayer => prayer.id);
+      const { data: supportData } = await supabase
+        .from('prayer_support')
+        .select('*')
+        .in('prayer_id', prayerIds);
+
+      const myPrayersWithSupport = myPrayersData.map(prayer => ({
         ...prayer,
-        supporters_count: prayer.prayer_support?.length || 0
-      })) || [];
+        supporters_count: supportData?.filter(support => support.prayer_id === prayer.id).length || 0
+      }));
 
       setMyPrayers(myPrayersWithSupport);
     } catch (error) {
