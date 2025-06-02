@@ -1,24 +1,30 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from './useNotifications';
 
 interface Friend {
   id: string;
   name: string;
   email: string;
   church?: string;
-  status: 'pending' | 'accepted' | 'blocked';
+}
+
+interface PendingRequest {
   friendship_id: string;
-  is_sender: boolean;
+  id: string;
+  name: string;
+  email: string;
+  church?: string;
 }
 
 export const useFriendships = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createNotification } = useNotifications();
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchFriends = async () => {
@@ -100,7 +106,7 @@ export const useFriendships = () => {
         return;
       }
 
-      // Buscar dados dos perfis dos remetentes
+      // Buscar dados dos remetentes
       const senderIds = requestsData.map(request => request.user_id);
 
       const { data: profilesData, error: profilesError } = await supabase
@@ -130,21 +136,31 @@ export const useFriendships = () => {
     }
   };
 
-  const sendFriendRequest = async (friendEmail: string) => {
+  const sendFriendRequest = async (email: string) => {
     if (!user) return false;
 
+    setLoading(true);
     try {
-      // Buscar o usuário pelo email
-      const { data: profiles, error: profileError } = await supabase
+      // Buscar usuário pelo email
+      const { data: targetUser, error: userError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('email', friendEmail)
+        .select('*')
+        .eq('email', email.toLowerCase())
         .single();
 
-      if (profileError || !profiles) {
+      if (userError || !targetUser) {
         toast({
           title: "Usuário não encontrado",
-          description: "Não encontramos nenhum usuário com esse email",
+          description: "Não foi possível encontrar um usuário com este email",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      if (targetUser.id === user.id) {
+        toast({
+          title: "Erro",
+          description: "Você não pode adicionar a si mesmo como amigo",
           variant: "destructive",
         });
         return false;
@@ -153,33 +169,42 @@ export const useFriendships = () => {
       // Verificar se já existe amizade
       const { data: existingFriendship } = await supabase
         .from('friendships')
-        .select('id')
-        .or(`and(user_id.eq.${user.id},friend_id.eq.${profiles.id}),and(user_id.eq.${profiles.id},friend_id.eq.${user.id})`)
+        .select('*')
+        .or(`and(user_id.eq.${user.id},friend_id.eq.${targetUser.id}),and(user_id.eq.${targetUser.id},friend_id.eq.${user.id})`)
         .single();
 
       if (existingFriendship) {
         toast({
           title: "Solicitação já existe",
-          description: "Você já tem uma solicitação de amizade com este usuário",
+          description: "Você já enviou uma solicitação para este usuário ou já são amigos",
           variant: "destructive",
         });
         return false;
       }
 
-      // Criar nova solicitação de amizade
+      // Criar solicitação de amizade
       const { error } = await supabase
         .from('friendships')
         .insert({
           user_id: user.id,
-          friend_id: profiles.id,
+          friend_id: targetUser.id,
           status: 'pending'
         });
 
       if (error) throw error;
 
+      // Criar notificação para o usuário alvo
+      await createNotification(
+        targetUser.id,
+        'friend_request',
+        'Nova solicitação de amizade',
+        `Você recebeu uma solicitação de amizade`,
+        user.id
+      );
+
       toast({
         title: "Solicitação enviada!",
-        description: "Sua solicitação de amizade foi enviada",
+        description: `Solicitação de amizade enviada para ${targetUser.name}`,
       });
 
       return true;
@@ -187,10 +212,12 @@ export const useFriendships = () => {
       console.error('Error sending friend request:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível enviar a solicitação",
+        description: "Não foi possível enviar a solicitação de amizade",
         variant: "destructive",
       });
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 

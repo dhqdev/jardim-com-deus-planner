@@ -71,6 +71,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          image_url: string | null
           message_type: string | null
           prayer_id: string | null
           read_at: string | null
@@ -81,6 +82,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          image_url?: string | null
           message_type?: string | null
           prayer_id?: string | null
           read_at?: string | null
@@ -91,6 +93,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          image_url?: string | null
           message_type?: string | null
           prayer_id?: string | null
           read_at?: string | null
@@ -106,6 +109,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string | null
+          from_user_id: string | null
+          id: string
+          is_read: boolean | null
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       prayer_support: {
         Row: {

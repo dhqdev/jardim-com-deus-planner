@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from './useNotifications';
 
 interface Prayer {
   id: string;
@@ -21,6 +21,7 @@ interface Prayer {
 export const usePrayers = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createNotification } = useNotifications();
   const [prayers, setPrayers] = useState<Prayer[]>([]);
   const [myPrayers, setMyPrayers] = useState<Prayer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,6 +159,22 @@ export const usePrayers = () => {
     if (!user) return false;
 
     try {
+      // Verificar se já está orando por esta oração
+      const { data: existingSupport } = await supabase
+        .from('prayer_support')
+        .select('id')
+        .eq('prayer_id', prayerId)
+        .eq('supporter_id', user.id)
+        .single();
+
+      if (existingSupport) {
+        toast({
+          title: "Você já está orando",
+          description: "Você já marcou que está orando por esta pessoa 🙏",
+        });
+        return false;
+      }
+
       const { error } = await supabase
         .from('prayer_support')
         .insert({
@@ -167,6 +184,23 @@ export const usePrayers = () => {
         });
 
       if (error) throw error;
+
+      // Buscar dados da oração para criar notificação
+      const { data: prayerData } = await supabase
+        .from('prayers')
+        .select('user_id, title')
+        .eq('id', prayerId)
+        .single();
+
+      if (prayerData && prayerData.user_id !== user.id) {
+        await createNotification(
+          prayerData.user_id,
+          'prayer_support',
+          'Alguém está orando por você!',
+          `Alguém está orando pelo seu pedido: "${prayerData.title}"`,
+          prayerId
+        );
+      }
 
       toast({
         title: "Oração apoiada!",

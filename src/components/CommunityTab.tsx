@@ -4,13 +4,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FriendsSection } from '@/components/FriendsSection';
 import { ChatSection } from '@/components/ChatSection';
 import { PrayersSection } from '@/components/PrayersSection';
-import { Users, MessageCircle, Heart } from 'lucide-react';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { Users, MessageCircle, Heart, Bell } from 'lucide-react';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Badge } from '@/components/ui/badge';
 
 interface CommunityTabProps {
   currentTheme: string;
 }
 
 export const CommunityTab = ({ currentTheme }: CommunityTabProps) => {
+  const { unreadCount } = useNotifications();
+
   const getThemeColors = () => {
     switch (currentTheme) {
       case 'night':
@@ -54,7 +59,7 @@ export const CommunityTab = ({ currentTheme }: CommunityTabProps) => {
       </div>
 
       <Tabs defaultValue="friends" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-white/20 backdrop-blur-sm">
+        <TabsList className="grid w-full grid-cols-4 bg-white/20 backdrop-blur-sm">
           <TabsTrigger value="friends" className="flex items-center space-x-2">
             <Users className="w-4 h-4" />
             <span>Amigos</span>
@@ -66,6 +71,15 @@ export const CommunityTab = ({ currentTheme }: CommunityTabProps) => {
           <TabsTrigger value="prayers" className="flex items-center space-x-2">
             <Heart className="w-4 h-4" />
             <span>Orações</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center space-x-2 relative">
+            <Bell className="w-4 h-4" />
+            <span>Notificações</span>
+            {unreadCount > 0 && (
+              <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -80,6 +94,10 @@ export const CommunityTab = ({ currentTheme }: CommunityTabProps) => {
           
           <TabsContent value="prayers" className="mt-0">
             <PrayersSection currentTheme={currentTheme} />
+          </TabsContent>
+          
+          <TabsContent value="notifications" className="mt-0">
+            <NotificationCenter currentTheme={currentTheme} />
           </TabsContent>
         </div>
       </Tabs>
