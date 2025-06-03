@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -142,20 +141,29 @@ export const useFriendships = () => {
     try {
       console.log('Searching for user with email:', friendEmail);
       
-      // Buscar o usuário pelo email
+      // Limpar e formatar o email
+      const cleanEmail = friendEmail.trim().toLowerCase();
+      
+      // Buscar o usuário pelo email usando uma abordagem mais simples
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, email, name')
-        .eq('email', friendEmail.trim().toLowerCase())
-        .maybeSingle();
+        .eq('email', cleanEmail);
 
       if (profileError) {
         console.error('Error searching for profile:', profileError);
-        throw profileError;
+        toast({
+          title: "Erro na busca",
+          description: "Erro ao buscar usuário no banco de dados",
+          variant: "destructive",
+        });
+        return false;
       }
 
-      if (!profiles) {
-        console.log('No user found with email:', friendEmail);
+      console.log('Search result:', profiles);
+
+      if (!profiles || profiles.length === 0) {
+        console.log('No user found with email:', cleanEmail);
         toast({
           title: "Usuário não encontrado",
           description: "Não encontramos nenhum usuário cadastrado com esse email",
@@ -164,10 +172,11 @@ export const useFriendships = () => {
         return false;
       }
 
-      console.log('Found user:', profiles);
+      const targetUser = profiles[0];
+      console.log('Found user:', targetUser);
 
       // Verificar se é o próprio usuário
-      if (profiles.id === user.id) {
+      if (targetUser.id === user.id) {
         toast({
           title: "Erro",
           description: "Você não pode adicionar a si mesmo como amigo",
@@ -176,12 +185,28 @@ export const useFriendships = () => {
         return false;
       }
 
-      // Verificar se já existe amizade
-      const { data: existingFriendship } = await supabase
+      // Verificar se já existe amizade usando uma consulta mais simples
+      const { data: existingFriendships, error: friendshipError } = await supabase
         .from('friendships')
-        .select('id, status')
-        .or(`and(user_id.eq.${user.id},friend_id.eq.${profiles.id}),and(user_id.eq.${profiles.id},friend_id.eq.${user.id})`)
-        .maybeSingle();
+        .select('id, status, user_id, friend_id')
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+        .or(`user_id.eq.${targetUser.id},friend_id.eq.${targetUser.id}`);
+
+      if (friendshipError) {
+        console.error('Error checking existing friendships:', friendshipError);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar amizades existentes",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Verificar se existe uma amizade entre os dois usuários
+      const existingFriendship = existingFriendships?.find(friendship => 
+        (friendship.user_id === user.id && friendship.friend_id === targetUser.id) ||
+        (friendship.user_id === targetUser.id && friendship.friend_id === user.id)
+      );
 
       if (existingFriendship) {
         const statusMessage = existingFriendship.status === 'pending' 
@@ -198,19 +223,27 @@ export const useFriendships = () => {
 
       // Criar nova solicitação de amizade
       console.log('Creating friendship request');
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('friendships')
         .insert({
           user_id: user.id,
-          friend_id: profiles.id,
+          friend_id: targetUser.id,
           status: 'pending'
         });
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('Error creating friendship:', insertError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível enviar a solicitação",
+          variant: "destructive",
+        });
+        return false;
+      }
 
       toast({
         title: "Solicitação enviada!",
-        description: `Sua solicitação de amizade foi enviada para ${profiles.name || profiles.email}`,
+        description: `Sua solicitação de amizade foi enviada para ${targetUser.name || targetUser.email}`,
       });
 
       return true;
