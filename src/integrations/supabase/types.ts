@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      community_invites: {
+        Row: {
+          accepted_at: string | null
+          email: string
+          id: string
+          invite_token: string | null
+          invited_at: string | null
+          is_accepted: boolean | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          email: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string | null
+          is_accepted?: boolean | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          email?: string
+          id?: string
+          invite_token?: string | null
+          invited_at?: string | null
+          is_accepted?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      daily_quotes: {
+        Row: {
+          author: string
+          bible_passage: string
+          bible_reference: string
+          created_at: string | null
+          day_of_week: number
+          devotional_text: string
+          id: string
+          quote: string
+          updated_at: string | null
+        }
+        Insert: {
+          author: string
+          bible_passage: string
+          bible_reference: string
+          created_at?: string | null
+          day_of_week: number
+          devotional_text: string
+          id?: string
+          quote: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string
+          bible_passage?: string
+          bible_reference?: string
+          created_at?: string | null
+          day_of_week?: number
+          devotional_text?: string
+          id?: string
+          quote?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       diary_entries: {
         Row: {
           content: string
@@ -71,6 +137,7 @@ export type Database = {
           content: string
           created_at: string | null
           id: string
+          image_url: string | null
           message_type: string | null
           prayer_id: string | null
           read_at: string | null
@@ -81,6 +148,7 @@ export type Database = {
           content: string
           created_at?: string | null
           id?: string
+          image_url?: string | null
           message_type?: string | null
           prayer_id?: string | null
           read_at?: string | null
@@ -91,6 +159,7 @@ export type Database = {
           content?: string
           created_at?: string | null
           id?: string
+          image_url?: string | null
           message_type?: string | null
           prayer_id?: string | null
           read_at?: string | null
@@ -106,6 +175,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          content: string
+          created_at: string | null
+          from_user_id: string | null
+          id: string
+          is_read: boolean | null
+          related_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          related_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          related_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       prayer_support: {
         Row: {
@@ -175,6 +280,7 @@ export type Database = {
       profiles: {
         Row: {
           church: string | null
+          community_access: boolean | null
           created_at: string | null
           email: string | null
           id: string
@@ -184,6 +290,7 @@ export type Database = {
         }
         Insert: {
           church?: string | null
+          community_access?: boolean | null
           created_at?: string | null
           email?: string | null
           id: string
@@ -193,12 +300,46 @@ export type Database = {
         }
         Update: {
           church?: string | null
+          community_access?: boolean | null
           created_at?: string | null
           email?: string | null
           id?: string
           name?: string | null
           testimony?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_daily_progress: {
+        Row: {
+          created_at: string | null
+          date: string
+          devotional_completed: boolean | null
+          id: string
+          passage_completed: boolean | null
+          quote_completed: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          devotional_completed?: boolean | null
+          id?: string
+          passage_completed?: boolean | null
+          quote_completed?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          devotional_completed?: boolean | null
+          id?: string
+          passage_completed?: boolean | null
+          quote_completed?: boolean | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
