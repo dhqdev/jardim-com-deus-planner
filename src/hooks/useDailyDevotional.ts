@@ -38,16 +38,28 @@ export const useDailyDevotional = () => {
   const fetchTodayQuote = async () => {
     try {
       const currentDay = getCurrentDayOfWeek();
+      console.log('Fetching quote for day:', currentDay);
+      
       const { data, error } = await supabase
         .from('daily_quotes')
         .select('*')
         .eq('day_of_week', currentDay)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching quote:', error);
+        throw error;
+      }
+      
+      console.log('Quote fetched successfully:', data);
       setTodayQuote(data);
     } catch (error) {
       console.error('Error fetching today quote:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o devocional de hoje",
+        variant: "destructive",
+      });
     }
   };
 
@@ -56,6 +68,8 @@ export const useDailyDevotional = () => {
     
     try {
       const today = new Date().toISOString().split('T')[0];
+      console.log('Fetching progress for date:', today);
+      
       const { data, error } = await supabase
         .from('user_daily_progress')
         .select('*')
@@ -63,7 +77,10 @@ export const useDailyDevotional = () => {
         .eq('date', today)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching progress:', error);
+        throw error;
+      }
       
       if (data) {
         setProgress({
@@ -71,6 +88,15 @@ export const useDailyDevotional = () => {
           passage_completed: data.passage_completed || false,
           devotional_completed: data.devotional_completed || false
         });
+        console.log('Progress loaded:', data);
+      } else {
+        // Reset progress for new day
+        setProgress({
+          quote_completed: false,
+          passage_completed: false,
+          devotional_completed: false
+        });
+        console.log('No progress found for today, resetting');
       }
     } catch (error) {
       console.error('Error fetching progress:', error);
@@ -88,6 +114,8 @@ export const useDailyDevotional = () => {
         date: today,
         [`${type}_completed`]: true
       };
+
+      console.log('Updating progress:', updateData);
 
       const { error } = await supabase
         .from('user_daily_progress')
@@ -124,6 +152,21 @@ export const useDailyDevotional = () => {
     if (user) {
       fetchUserProgress();
     }
+  }, [user]);
+
+  // Check for day change and refresh content
+  useEffect(() => {
+    const checkForDayChange = () => {
+      fetchTodayQuote();
+      if (user) {
+        fetchUserProgress();
+      }
+    };
+
+    // Check every minute if the day has changed
+    const interval = setInterval(checkForDayChange, 60000);
+    
+    return () => clearInterval(interval);
   }, [user]);
 
   return {

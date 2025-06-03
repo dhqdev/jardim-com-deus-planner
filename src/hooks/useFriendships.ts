@@ -26,6 +26,8 @@ export const useFriendships = () => {
     
     setLoading(true);
     try {
+      console.log('Fetching friends for user:', user.id);
+      
       // Buscar amizades aceitas
       const { data: friendshipsData, error: friendshipsError } = await supabase
         .from('friendships')
@@ -70,6 +72,7 @@ export const useFriendships = () => {
       });
 
       setFriends(friendsList);
+      console.log('Friends loaded:', friendsList);
     } catch (error) {
       console.error('Error fetching friends:', error);
       toast({
@@ -86,6 +89,8 @@ export const useFriendships = () => {
     if (!user) return;
     
     try {
+      console.log('Fetching pending requests for user:', user.id);
+      
       // Buscar solicitações pendentes onde o usuário atual é o receptor
       const { data: requestsData, error: requestsError } = await supabase
         .from('friendships')
@@ -125,6 +130,7 @@ export const useFriendships = () => {
       });
 
       setPendingRequests(requests);
+      console.log('Pending requests loaded:', requests);
     } catch (error) {
       console.error('Error fetching pending requests:', error);
     }
@@ -134,17 +140,37 @@ export const useFriendships = () => {
     if (!user) return false;
 
     try {
+      console.log('Searching for user with email:', friendEmail);
+      
       // Buscar o usuário pelo email
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id')
-        .eq('email', friendEmail)
-        .single();
+        .select('id, email, name')
+        .eq('email', friendEmail.trim().toLowerCase())
+        .maybeSingle();
 
-      if (profileError || !profiles) {
+      if (profileError) {
+        console.error('Error searching for profile:', profileError);
+        throw profileError;
+      }
+
+      if (!profiles) {
+        console.log('No user found with email:', friendEmail);
         toast({
           title: "Usuário não encontrado",
-          description: "Não encontramos nenhum usuário com esse email",
+          description: "Não encontramos nenhum usuário cadastrado com esse email",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      console.log('Found user:', profiles);
+
+      // Verificar se é o próprio usuário
+      if (profiles.id === user.id) {
+        toast({
+          title: "Erro",
+          description: "Você não pode adicionar a si mesmo como amigo",
           variant: "destructive",
         });
         return false;
@@ -153,20 +179,25 @@ export const useFriendships = () => {
       // Verificar se já existe amizade
       const { data: existingFriendship } = await supabase
         .from('friendships')
-        .select('id')
+        .select('id, status')
         .or(`and(user_id.eq.${user.id},friend_id.eq.${profiles.id}),and(user_id.eq.${profiles.id},friend_id.eq.${user.id})`)
-        .single();
+        .maybeSingle();
 
       if (existingFriendship) {
+        const statusMessage = existingFriendship.status === 'pending' 
+          ? 'Você já enviou uma solicitação para este usuário ou ele te enviou uma'
+          : 'Vocês já são amigos';
+        
         toast({
           title: "Solicitação já existe",
-          description: "Você já tem uma solicitação de amizade com este usuário",
+          description: statusMessage,
           variant: "destructive",
         });
         return false;
       }
 
       // Criar nova solicitação de amizade
+      console.log('Creating friendship request');
       const { error } = await supabase
         .from('friendships')
         .insert({
@@ -179,7 +210,7 @@ export const useFriendships = () => {
 
       toast({
         title: "Solicitação enviada!",
-        description: "Sua solicitação de amizade foi enviada",
+        description: `Sua solicitação de amizade foi enviada para ${profiles.name || profiles.email}`,
       });
 
       return true;
@@ -196,6 +227,8 @@ export const useFriendships = () => {
 
   const acceptFriendRequest = async (friendshipId: string) => {
     try {
+      console.log('Accepting friendship:', friendshipId);
+      
       const { error } = await supabase
         .from('friendships')
         .update({ status: 'accepted' })
@@ -222,6 +255,8 @@ export const useFriendships = () => {
 
   const rejectFriendRequest = async (friendshipId: string) => {
     try {
+      console.log('Rejecting friendship:', friendshipId);
+      
       const { error } = await supabase
         .from('friendships')
         .delete()
@@ -230,6 +265,11 @@ export const useFriendships = () => {
       if (error) throw error;
 
       fetchPendingRequests();
+      
+      toast({
+        title: "Solicitação rejeitada",
+        description: "A solicitação de amizade foi rejeitada",
+      });
     } catch (error) {
       console.error('Error rejecting friend request:', error);
       toast({
