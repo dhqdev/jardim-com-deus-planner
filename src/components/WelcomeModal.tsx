@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Flower } from 'lucide-react';
 
 interface WelcomeModalProps {
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentTheme: string;
 }
 
-export const WelcomeModal = ({ onClose }: WelcomeModalProps) => {
+export const WelcomeModal = ({ open, onOpenChange, currentTheme }: WelcomeModalProps) => {
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
         <div className="text-center py-6">
           <div className="text-6xl mb-4 animate-bounce">🌸</div>
@@ -36,7 +38,7 @@ export const WelcomeModal = ({ onClose }: WelcomeModalProps) => {
             </p>
             
             <Button 
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
               size="lg"
             >
