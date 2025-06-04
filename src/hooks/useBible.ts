@@ -35,7 +35,7 @@ export const useBible = () => {
         .order('book_number');
 
       if (error) throw error;
-      setBooks((data as BibleBook[]) || []);
+      setBooks((data as unknown as BibleBook[]) || []);
     } catch (error) {
       console.error('Error fetching bible books:', error);
       toast({
@@ -57,7 +57,7 @@ export const useBible = () => {
         .order('verse');
 
       if (error) throw error;
-      setVerses((data as BibleVerse[]) || []);
+      setVerses((data as unknown as BibleVerse[]) || []);
     } catch (error) {
       console.error('Error fetching bible verses:', error);
       toast({

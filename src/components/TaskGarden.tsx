@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,7 +5,10 @@ import { Plus, Calendar, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NewTaskModal } from '@/components/NewTaskModal';
 import { HarvestModal } from '@/components/HarvestModal';
-import { TaskCalendar } from '@/components/TaskCalendar';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useUserTasks, UserTask } from '@/hooks/useUserTasks';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,10 +20,10 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
   const { tasks, loading, createTask, updateTask, deleteTask } = useUserTasks();
   const [showNewTask, setShowNewTask] = useState(false);
   const [showHarvest, setShowHarvest] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
   const [harvestTask, setHarvestTask] = useState<UserTask | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const { toast } = useToast();
 
   const categories = [
@@ -186,14 +188,29 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
                 </SelectContent>
               </Select>
 
-              <Button 
-                variant="outline" 
-                onClick={() => setShowCalendar(true)}
-                className="bg-white/50 w-full sm:w-auto"
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                {selectedDate ? selectedDate.toLocaleDateString('pt-BR') : 'Selecionar Data'}
-              </Button>
+              <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="bg-white/50 w-full sm:w-auto"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar Data'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate || undefined}
+                    onSelect={(date) => {
+                      setSelectedDate(date || null);
+                      setShowDatePicker(false);
+                    }}
+                    initialFocus
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
 
               {(selectedCategory || selectedDate) && (
                 <Button 
@@ -308,17 +325,6 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
         <NewTaskModal 
           onClose={() => setShowNewTask(false)}
           onSave={handleSaveTask}
-          selectedDate={selectedDate}
-        />
-      )}
-
-      {showCalendar && (
-        <TaskCalendar 
-          onClose={() => setShowCalendar(false)}
-          onSelectDate={(date) => {
-            setSelectedDate(date);
-            setShowCalendar(false);
-          }}
           selectedDate={selectedDate}
         />
       )}
