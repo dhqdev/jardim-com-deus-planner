@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,14 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
+  content: string;
   sender_id: string;
   receiver_id: string;
-  content: string;
-  message_type: 'text' | 'prayer_request' | 'prayer_response';
   created_at: string;
-  read_at: string | null;
-  prayer_id: string | null;
-  sender_name?: string;
+  read_at?: string;
 }
 
 interface Conversation {
@@ -33,111 +29,69 @@ export const useMessages = () => {
 
   const fetchConversations = async () => {
     if (!user) return;
-    
-    setLoading(true);
+
     try {
-      const { data: messagesData, error: messagesError } = await supabase
+      const { data: messages, error } = await supabase
         .from('messages')
         .select('*')
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order('created_at', { ascending: false });
 
-      if (messagesError) throw messagesError;
+      if (error) throw error;
 
-      if (!messagesData || messagesData.length === 0) {
-        setConversations([]);
-        setLoading(false);
-        return;
-      }
-
-      // Obter IDs únicos dos amigos
-      const friendIds = Array.from(new Set(
-        messagesData.map(message => 
-          message.sender_id === user.id ? message.receiver_id : message.sender_id
-        )
-      ));
-
-      // Buscar dados dos perfis
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', friendIds);
-
-      if (profilesError) throw profilesError;
-
-      // Agrupar mensagens por conversa
-      const conversationMap = new Map<string, Conversation>();
+      // Agrupar mensagens por conversação
+      const conversationMap = new Map();
       
-      messagesData.forEach(message => {
-        const isCurrentUserSender = message.sender_id === user.id;
-        const friendId = isCurrentUserSender ? message.receiver_id : message.sender_id;
-        const friendProfile = profilesData?.find(profile => profile.id === friendId);
-        const friendName = friendProfile?.name || 'Usuário';
-
+      for (const message of messages || []) {
+        const friendId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
+        
         if (!conversationMap.has(friendId)) {
           conversationMap.set(friendId, {
             friend_id: friendId,
-            friend_name: friendName,
             last_message: message.content,
             last_message_time: message.created_at,
-            unread_count: 0
+            unread_count: message.receiver_id === user.id && !message.read_at ? 1 : 0
           });
+        } else {
+          const existing = conversationMap.get(friendId);
+          if (message.receiver_id === user.id && !message.read_at) {
+            existing.unread_count++;
+          }
         }
-
-        // Contar mensagens não lidas
-        if (!isCurrentUserSender && !message.read_at) {
-          const conv = conversationMap.get(friendId)!;
-          conv.unread_count += 1;
-        }
-      });
+      }
 
       setConversations(Array.from(conversationMap.values()));
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as conversas",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchMessages = async (friendId: string) => {
     if (!user) return;
-    
+
+    setLoading(true);
     try {
-      const { data: messagesData, error: messagesError } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
-        .order('created_at', { ascending: true });
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),` +
+          `and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`
+        )
+        .order('created_at');
 
-      if (messagesError) throw messagesError;
+      if (error) throw error;
 
-      if (!messagesData) {
-        setCurrentMessages([]);
-        return;
-      }
-
-      // Buscar nomes dos remetentes
-      const senderIds = Array.from(new Set(messagesData.map(msg => msg.sender_id)));
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('*')
-        .in('id', senderIds);
-
-      const messages = messagesData.map(msg => ({
-        ...msg,
-        message_type: msg.message_type as 'text' | 'prayer_request' | 'prayer_response',
-        sender_name: profilesData?.find(p => p.id === msg.sender_id)?.name || 'Usuário'
-      }));
-
-      setCurrentMessages(messages);
+      setCurrentMessages(data || []);
 
       // Marcar mensagens como lidas
-      await markMessagesAsRead(friendId);
+      await supabase
+        .from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .eq('sender_id', friendId)
+        .eq('receiver_id', user.id)
+        .is('read_at', null);
+
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
@@ -145,11 +99,13 @@ export const useMessages = () => {
         description: "Não foi possível carregar as mensagens",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const sendMessage = async (receiverId: string, content: string, messageType: 'text' | 'prayer_request' | 'prayer_response' = 'text', prayerId?: string) => {
-    if (!user) return false;
+  const sendMessage = async (receiverId: string, content: string) => {
+    if (!user || !content.trim()) return false;
 
     try {
       const { error } = await supabase
@@ -157,17 +113,14 @@ export const useMessages = () => {
         .insert({
           sender_id: user.id,
           receiver_id: receiverId,
-          content,
-          message_type: messageType,
-          prayer_id: prayerId
+          content: content.trim()
         });
 
       if (error) throw error;
 
-      // Recarregar mensagens
-      fetchMessages(receiverId);
+      // Atualizar lista de conversações
       fetchConversations();
-
+      
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -180,23 +133,6 @@ export const useMessages = () => {
     }
   };
 
-  const markMessagesAsRead = async (senderId: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await supabase
-        .from('messages')
-        .update({ read_at: new Date().toISOString() })
-        .eq('sender_id', senderId)
-        .eq('receiver_id', user.id)
-        .is('read_at', null);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error marking messages as read:', error);
-    }
-  };
-
   // Configurar realtime para mensagens
   useEffect(() => {
     if (!user) return;
@@ -206,13 +142,37 @@ export const useMessages = () => {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'messages',
           filter: `receiver_id=eq.${user.id}`
         },
-        () => {
-          fetchConversations();
+        (payload) => {
+          console.log('New message received:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            const newMessage = payload.new as Message;
+            
+            // Se estamos visualizando a conversa, adicionar a mensagem
+            if (currentMessages.length > 0) {
+              const isCurrentConversation = currentMessages.some(
+                msg => msg.sender_id === newMessage.sender_id || msg.receiver_id === newMessage.sender_id
+              );
+              
+              if (isCurrentConversation) {
+                setCurrentMessages(prev => [...prev, newMessage]);
+                
+                // Marcar como lida automaticamente se estamos na conversa
+                supabase
+                  .from('messages')
+                  .update({ read_at: new Date().toISOString() })
+                  .eq('id', newMessage.id);
+              }
+            }
+            
+            // Atualizar lista de conversações
+            fetchConversations();
+          }
         }
       )
       .subscribe();
@@ -220,7 +180,7 @@ export const useMessages = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, currentMessages]);
 
   useEffect(() => {
     if (user) {

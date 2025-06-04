@@ -1,60 +1,94 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Sprout, Calendar, Heart, Users, Book } from 'lucide-react';
 import { TaskGarden } from '@/components/TaskGarden';
+import { TaskCalendar } from '@/components/TaskCalendar';
 import { NewDevotionalTab } from '@/components/NewDevotionalTab';
-import { SpiritualDiary } from '@/components/SpiritualDiary';
 import { NewCommunityTab } from '@/components/NewCommunityTab';
-import { Sprout, BookOpen, Heart, Users } from 'lucide-react';
+import { BibleTab } from '@/components/BibleTab';
 
 interface NewGardenTabsProps {
   currentTheme: string;
-  setCurrentTheme: (theme: string) => void;
 }
 
-export const NewGardenTabs = ({ currentTheme, setCurrentTheme }: NewGardenTabsProps) => {
+export const NewGardenTabs = ({ currentTheme }: NewGardenTabsProps) => {
+  const [activeTab, setActiveTab] = useState('garden');
+
+  const getThemeColors = () => {
+    switch (currentTheme) {
+      case 'night':
+        return {
+          text: 'text-blue-200',
+          accent: 'text-purple-300',
+          bg: 'bg-indigo-800/30'
+        };
+      case 'desert':
+        return {
+          text: 'text-orange-800',
+          accent: 'text-amber-600',
+          bg: 'bg-orange-200/40'
+        };
+      case 'gratitude':
+        return {
+          text: 'text-pink-800',
+          accent: 'text-rose-600',
+          bg: 'bg-pink-200/40'
+        };
+      default:
+        return {
+          text: 'text-green-800',
+          accent: 'text-green-600',
+          bg: 'bg-white/40'
+        };
+    }
+  };
+
+  const colors = getThemeColors();
+
   return (
-    <Tabs defaultValue="tasks" className="w-full">
-      <TabsList className="grid w-full grid-cols-4 bg-white/20 backdrop-blur-sm mb-4 md:mb-6">
-        <TabsTrigger value="tasks" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 text-xs md:text-sm py-2 md:py-3">
-          <Sprout className="w-4 h-4 md:w-4 md:h-4" />
-          <span className="hidden md:inline">Canteiro</span>
-          <span className="md:hidden text-xs">Canteiro</span>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-5 bg-white/20 backdrop-blur-sm">
+        <TabsTrigger value="garden" className="flex flex-col items-center space-y-1">
+          <Sprout className="w-4 h-4" />
+          <span className="text-xs">Jardim</span>
         </TabsTrigger>
-        <TabsTrigger value="devotional" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 text-xs md:text-sm py-2 md:py-3">
-          <BookOpen className="w-4 h-4 md:w-4 md:h-4" />
-          <span className="hidden md:inline">Devocional</span>
-          <span className="md:hidden text-xs">Oração</span>
+        <TabsTrigger value="calendar" className="flex flex-col items-center space-y-1">
+          <Calendar className="w-4 h-4" />
+          <span className="text-xs">Calendário</span>
         </TabsTrigger>
-        <TabsTrigger value="diary" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 text-xs md:text-sm py-2 md:py-3">
-          <Heart className="w-4 h-4 md:w-4 md:h-4" />
-          <span className="hidden md:inline">Diário</span>
-          <span className="md:hidden text-xs">Diário</span>
+        <TabsTrigger value="devotional" className="flex flex-col items-center space-y-1">
+          <Heart className="w-4 h-4" />
+          <span className="text-xs">Devocional</span>
         </TabsTrigger>
-        <TabsTrigger value="community" className="flex flex-col md:flex-row items-center space-y-1 md:space-y-0 md:space-x-2 text-xs md:text-sm py-2 md:py-3">
-          <Users className="w-4 h-4 md:w-4 md:h-4" />
-          <span className="hidden md:inline">Comunidade</span>
-          <span className="md:hidden text-xs">Amigos</span>
+        <TabsTrigger value="community" className="flex flex-col items-center space-y-1">
+          <Users className="w-4 h-4" />
+          <span className="text-xs">Comunidade</span>
+        </TabsTrigger>
+        <TabsTrigger value="bible" className="flex flex-col items-center space-y-1">
+          <Book className="w-4 h-4" />
+          <span className="text-xs">Bíblia</span>
         </TabsTrigger>
       </TabsList>
 
-      <div className="mt-4 md:mt-6">
-        <TabsContent value="tasks" className="mt-0">
-          <TaskGarden currentTheme={currentTheme} />
-        </TabsContent>
-        
-        <TabsContent value="devotional" className="mt-0">
-          <NewDevotionalTab currentTheme={currentTheme} />
-        </TabsContent>
-        
-        <TabsContent value="diary" className="mt-0">
-          <SpiritualDiary currentTheme={currentTheme} />
-        </TabsContent>
-        
-        <TabsContent value="community" className="mt-0">
-          <NewCommunityTab currentTheme={currentTheme} />
-        </TabsContent>
-      </div>
+      <TabsContent value="garden" className="mt-6">
+        <TaskGarden currentTheme={currentTheme} />
+      </TabsContent>
+      
+      <TabsContent value="calendar" className="mt-6">
+        <TaskCalendar currentTheme={currentTheme} />
+      </TabsContent>
+      
+      <TabsContent value="devotional" className="mt-6">
+        <NewDevotionalTab currentTheme={currentTheme} />
+      </TabsContent>
+      
+      <TabsContent value="community" className="mt-6">
+        <NewCommunityTab currentTheme={currentTheme} />
+      </TabsContent>
+      
+      <TabsContent value="bible" className="mt-6">
+        <BibleTab currentTheme={currentTheme} />
+      </TabsContent>
     </Tabs>
   );
 };

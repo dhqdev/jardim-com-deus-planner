@@ -45,20 +45,44 @@ export const useCommunityAccess = () => {
       if (existingInvite) {
         toast({
           title: "Convite já enviado",
-          description: "Você já possui um convite para a comunidade",
+          description: "Você já possui um convite para a comunidade. Verifique seu email.",
         });
         return false;
       }
 
+      // Gerar token único para o convite
+      const inviteToken = crypto.randomUUID();
+
       // Criar novo convite
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from('community_invites')
         .insert({
           user_id: user.id,
-          email: user.email || ''
+          email: user.email || '',
+          invite_token: inviteToken,
+          sent_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias
         });
 
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // Chamar edge function para enviar email
+      const { error: emailError } = await supabase.functions.invoke('send-community-invite', {
+        body: {
+          email: user.email,
+          inviteToken: inviteToken
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending email:', emailError);
+        toast({
+          title: "Convite criado",
+          description: "Convite criado, mas houve um problema ao enviar o email. Entre em contato conosco.",
+          variant: "destructive",
+        });
+        return false;
+      }
 
       toast({
         title: "Convite enviado!",
@@ -89,6 +113,16 @@ export const useCommunityAccess = () => {
         toast({
           title: "Convite inválido",
           description: "Este link de convite não é válido",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Verificar se não expirou
+      if (new Date(invite.expires_at) < new Date()) {
+        toast({
+          title: "Convite expirado",
+          description: "Este convite já expirou. Solicite um novo.",
           variant: "destructive",
         });
         return false;
