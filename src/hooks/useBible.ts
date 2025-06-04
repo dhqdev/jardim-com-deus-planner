@@ -30,12 +30,12 @@ export const useBible = () => {
   const fetchBooks = async () => {
     try {
       const { data, error } = await supabase
-        .from('bible_books')
+        .from('bible_books' as any)
         .select('*')
         .order('book_number');
 
       if (error) throw error;
-      setBooks(data || []);
+      setBooks((data as BibleBook[]) || []);
     } catch (error) {
       console.error('Error fetching bible books:', error);
       toast({
@@ -50,14 +50,14 @@ export const useBible = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('bible_verses')
+        .from('bible_verses' as any)
         .select('*')
         .eq('book_id', bookId)
         .eq('chapter', chapter)
         .order('verse');
 
       if (error) throw error;
-      setVerses(data || []);
+      setVerses((data as BibleVerse[]) || []);
     } catch (error) {
       console.error('Error fetching bible verses:', error);
       toast({

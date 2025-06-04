@@ -4,6 +4,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+interface CommunityInvite {
+  id: string;
+  user_id: string;
+  email: string;
+  invite_token: string;
+  is_accepted: boolean;
+  invited_at: string;
+  accepted_at?: string;
+  sent_at?: string;
+  expires_at?: string;
+}
+
 export const useCommunityAccess = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -118,8 +130,10 @@ export const useCommunityAccess = () => {
         return false;
       }
 
+      const inviteData = invite as CommunityInvite;
+
       // Verificar se não expirou
-      if (new Date(invite.expires_at) < new Date()) {
+      if (inviteData.expires_at && new Date(inviteData.expires_at) < new Date()) {
         toast({
           title: "Convite expirado",
           description: "Este convite já expirou. Solicite um novo.",
@@ -143,7 +157,7 @@ export const useCommunityAccess = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ community_access: true })
-        .eq('id', invite.user_id);
+        .eq('id', inviteData.user_id);
 
       if (profileError) throw profileError;
 
