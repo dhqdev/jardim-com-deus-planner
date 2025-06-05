@@ -2,22 +2,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
-interface BibleBook {
-  id: number;
-  book_number: number;
-  book_name: string;
-  testament: 'Old' | 'New';
-  chapters: number;
-}
-
-interface BibleVerse {
-  id: number;
-  book_id: number;
-  chapter: number;
-  verse: number;
-  text: string;
-}
+type BibleBook = Database['public']['Tables']['bible_books']['Row'];
+type BibleVerse = Database['public']['Tables']['bible_verses']['Row'];
 
 export const useBible = () => {
   const { toast } = useToast();
