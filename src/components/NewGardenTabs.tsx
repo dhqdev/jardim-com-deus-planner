@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sprout, Calendar, Heart, Users, Book } from 'lucide-react';
+import { Sprout, Calendar, Heart, Users, MessageCircle } from 'lucide-react';
 import { TaskGarden } from '@/components/TaskGarden';
 import { TaskCalendar } from '@/components/TaskCalendar';
 import { NewDevotionalTab } from '@/components/NewDevotionalTab';
 import { NewCommunityTab } from '@/components/NewCommunityTab';
-import { BibleTab } from '@/components/BibleTab';
+import { ChatWithGod } from '@/components/ChatWithGod';
 
 interface NewGardenTabsProps {
   currentTheme: string;
@@ -65,9 +65,9 @@ export const NewGardenTabs = ({ currentTheme }: NewGardenTabsProps) => {
           <Users className="w-4 h-4" />
           <span className="text-xs">Comunidade</span>
         </TabsTrigger>
-        <TabsTrigger value="bible" className="flex flex-col items-center space-y-1">
-          <Book className="w-4 h-4" />
-          <span className="text-xs">Bíblia</span>
+        <TabsTrigger value="chat" className="flex flex-col items-center space-y-1">
+          <MessageCircle className="w-4 h-4" />
+          <span className="text-xs">Chat</span>
         </TabsTrigger>
       </TabsList>
 
@@ -87,8 +87,8 @@ export const NewGardenTabs = ({ currentTheme }: NewGardenTabsProps) => {
         <NewCommunityTab currentTheme={currentTheme} />
       </TabsContent>
       
-      <TabsContent value="bible" className="mt-6">
-        <BibleTab currentTheme={currentTheme} />
+      <TabsContent value="chat" className="mt-6">
+        <ChatWithGod currentTheme={currentTheme} />
       </TabsContent>
     </Tabs>
   );

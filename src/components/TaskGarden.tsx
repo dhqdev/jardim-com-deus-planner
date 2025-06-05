@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Calendar, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Trash2, Sparkles, Star, Heart } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NewTaskModal } from '@/components/NewTaskModal';
 import { HarvestModal } from '@/components/HarvestModal';
@@ -43,6 +43,41 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     'Exercícios',
     'Relacionamentos'
   ];
+
+  const getThemeColors = () => {
+    switch (currentTheme) {
+      case 'night':
+        return {
+          text: 'text-blue-100',
+          accent: 'text-purple-300',
+          bg: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900',
+          cardBg: 'bg-indigo-800/40'
+        };
+      case 'desert':
+        return {
+          text: 'text-orange-100',
+          accent: 'text-amber-300',
+          bg: 'bg-gradient-to-br from-orange-800 via-red-700 to-yellow-800',
+          cardBg: 'bg-orange-700/40'
+        };
+      case 'gratitude':
+        return {
+          text: 'text-pink-100',
+          accent: 'text-rose-300',
+          bg: 'bg-gradient-to-br from-pink-800 via-rose-700 to-purple-800',
+          cardBg: 'bg-pink-700/40'
+        };
+      default:
+        return {
+          text: 'text-green-100',
+          accent: 'text-green-300',
+          bg: 'bg-gradient-to-br from-green-800 via-emerald-700 to-teal-800',
+          cardBg: 'bg-green-700/40'
+        };
+    }
+  };
+
+  const colors = getThemeColors();
 
   const getPlantEmoji = (category: string, status: string) => {
     const plants = {
@@ -156,169 +191,232 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="text-green-800">Carregando suas tarefas...</div>
+      <div className={`${colors.bg} min-h-screen flex items-center justify-center`}>
+        <div className="text-center space-y-4">
+          <Sparkles className={`w-12 h-12 ${colors.accent} animate-spin mx-auto`} />
+          <div className={`${colors.text} text-xl`}>Carregando seu jardim sagrado...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 md:p-6">
-        <div className="flex flex-col space-y-4">
-          <div className="text-center md:text-left">
-            <h2 className="text-2xl md:text-3xl font-bold text-green-800">Seu Canteiro de Responsabilidades</h2>
-            <p className="text-green-600 mt-2 text-sm md:text-base">Cada tarefa é uma semente de propósito plantada com amor</p>
-          </div>
-          
-          {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full sm:w-48 bg-white/50">
-                  <SelectValue placeholder="Filtrar por categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="bg-white/50 w-full sm:w-auto"
-                  >
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar Data'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <CalendarComponent
-                    mode="single"
-                    selected={selectedDate || undefined}
-                    onSelect={(date) => {
-                      setSelectedDate(date || null);
-                      setShowDatePicker(false);
-                    }}
-                    initialFocus
-                    locale={ptBR}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {(selectedCategory || selectedDate) && (
-                <Button 
-                  variant="ghost" 
-                  onClick={() => {
-                    setSelectedCategory('');
-                    setSelectedDate(null);
-                  }}
-                  className="text-xs"
-                >
-                  Limpar Filtros
-                </Button>
-              )}
+    <div className={`min-h-screen ${colors.bg} p-6`}>
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <Card className={`${colors.cardBg} backdrop-blur-sm border-white/20 p-6 md:p-8 transform hover:scale-105 transition-all duration-300`}>
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <Star className={`w-10 h-10 ${colors.accent} animate-pulse`} />
+                <h1 className={`text-3xl md:text-4xl font-bold ${colors.text}`}>
+                  Seu Jardim Espiritual
+                </h1>
+                <Heart className={`w-10 h-10 ${colors.accent} animate-pulse`} />
+              </div>
+              <p className={`${colors.text} text-lg opacity-90`}>
+                Cada tarefa é uma semente de propósito plantada com amor divino
+              </p>
             </div>
             
-            <Button 
-              onClick={() => setShowNewTask(true)}
-              className="bg-green-600 hover:bg-green-700 w-full md:w-auto"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Plantar Nova
-            </Button>
-          </div>
-        </div>
-      </div>
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-full sm:w-48 bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Filtrar categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-      {/* Task Garden Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {tasksForSelectedDate.map((task) => {
-          const status = getTaskStatus(task);
-          return (
-            <Card key={task.id} className="bg-white/30 backdrop-blur-sm border-white/40 p-4 hover:bg-white/40 transition-all duration-300 hover:scale-105 relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDeleteTask(task.id)}
-                className="absolute top-1 right-1 p-1 text-red-500 hover:text-red-700 hover:bg-red-50"
-                title="Excluir tarefa"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-
-              <div className="text-center mb-4 mt-2">
-                <div className="text-5xl md:text-6xl mb-3 animate-bounce cursor-pointer" 
-                     style={{ animationDuration: '3s' }}
-                     onClick={() => handleCompleteTask(task)}>
-                  {getPlantEmoji(task.category, status)}
-                </div>
-                <div className="text-xs text-green-600 mb-1">{task.category}</div>
-                <h3 className="font-semibold text-green-800 text-sm md:text-base leading-tight">{task.title}</h3>
-                {task.description && (
-                  <p className="text-xs text-green-600 mt-2 leading-relaxed">{task.description}</p>
-                )}
+                <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 w-full sm:w-auto"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: ptBR }) : 'Data'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate || undefined}
+                      onSelect={(date) => {
+                        setSelectedDate(date || null);
+                        setShowDatePicker(false);
+                      }}
+                      initialFocus
+                      locale={ptBR}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    status === 'seed' ? 'bg-yellow-200 text-yellow-800' :
-                    status === 'sprout' ? 'bg-green-200 text-green-800' :
-                    status === 'flower' ? 'bg-blue-200 text-blue-800' :
-                    'bg-purple-200 text-purple-800'
-                  }`}>
-                    {status === 'seed' ? 'Semente' :
-                     status === 'sprout' ? 'Brotando' : 
-                     status === 'flower' ? 'Florescendo' : 'Madura'}
-                  </span>
-                </div>
-                
-                {task.verse && (
-                  <div className="text-xs italic text-green-700 bg-green-50/50 p-2 rounded leading-relaxed">
-                    {task.verse.length > 60 ? task.verse.substring(0, 60) + '...' : task.verse}
-                  </div>
-                )}
-
-                {task.due_date && (
-                  <div className="text-xs text-green-600">
-                    📅 {new Date(task.due_date).toLocaleDateString('pt-BR')}
-                  </div>
+              <div className="flex gap-3">
+                {(selectedCategory || selectedDate) && (
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setSelectedDate(null);
+                    }}
+                    className={`${colors.text} hover:bg-white/20`}
+                  >
+                    Limpar Filtros
+                  </Button>
                 )}
                 
                 <Button 
-                  onClick={() => handleCompleteTask(task)}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white text-xs"
-                  size="sm"
-                  disabled={task.completed}
+                  onClick={() => setShowNewTask(true)}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white transform hover:scale-105 transition-all duration-300"
                 >
-                  {task.completed ? 'Colher Fruto' : 'Completar Tarefa'}
+                  <Plus className="w-4 h-4 mr-2" />
+                  Plantar Nova Semente
                 </Button>
               </div>
-            </Card>
-          );
-        })}
-
-        {tasksForSelectedDate.length === 0 && (
-          <div className="col-span-full text-center py-8">
-            <p className="text-green-600 mb-4">
-              {selectedCategory || selectedDate ? 'Nenhuma tarefa encontrada para os filtros selecionados.' : 'Seu jardim está vazio. Plante sua primeira semente!'}
-            </p>
-            <Button 
-              onClick={() => setShowNewTask(true)}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Plantar Primeira Tarefa
-            </Button>
+            </div>
           </div>
-        )}
+        </Card>
+
+        {/* Task Garden Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {tasksForSelectedDate.map((task, index) => {
+            const status = getTaskStatus(task);
+            return (
+              <Card 
+                key={task.id} 
+                className={`${colors.cardBg} backdrop-blur-sm border-white/20 p-6 hover:bg-white/20 transition-all duration-500 hover:scale-110 cursor-pointer relative transform hover:rotate-1 shadow-xl`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteTask(task.id)}
+                  className="absolute top-2 right-2 p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-full"
+                  title="Excluir tarefa"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+
+                <div className="text-center mb-6 mt-2">
+                  <div 
+                    className="text-6xl md:text-7xl mb-4 animate-bounce cursor-pointer hover:scale-110 transition-transform duration-300" 
+                    style={{ animationDuration: '3s' }}
+                    onClick={() => handleCompleteTask(task)}
+                  >
+                    {getPlantEmoji(task.category, status)}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                      task.category === 'Oração' ? 'bg-purple-500/30 text-purple-200' :
+                      task.category === 'Estudo Bíblico' ? 'bg-blue-500/30 text-blue-200' :
+                      task.category === 'Família' ? 'bg-pink-500/30 text-pink-200' :
+                      'bg-green-500/30 text-green-200'
+                    }`}>
+                      {task.category}
+                    </span>
+                    
+                    <h3 className={`font-semibold ${colors.text} text-lg leading-tight`}>
+                      {task.title}
+                    </h3>
+                    
+                    {task.description && (
+                      <p className={`text-sm ${colors.text} opacity-80 leading-relaxed`}>
+                        {task.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      status === 'seed' ? 'bg-yellow-500/30 text-yellow-200' :
+                      status === 'sprout' ? 'bg-green-500/30 text-green-200' :
+                      status === 'flower' ? 'bg-blue-500/30 text-blue-200' :
+                      'bg-purple-500/30 text-purple-200'
+                    }`}>
+                      {status === 'seed' ? '🌱 Semente' :
+                       status === 'sprout' ? '🌿 Brotando' : 
+                       status === 'flower' ? '🌸 Florescendo' : '🌺 Madura'}
+                    </span>
+                  </div>
+                  
+                  {task.verse && (
+                    <div className="text-xs italic bg-white/10 p-3 rounded-lg border border-white/20">
+                      <Sparkles className="w-3 h-3 inline mr-1" />
+                      {task.verse.length > 80 ? task.verse.substring(0, 80) + '...' : task.verse}
+                    </div>
+                  )}
+
+                  {task.due_date && (
+                    <div className={`text-xs ${colors.text} opacity-80 text-center`}>
+                      📅 {new Date(task.due_date).toLocaleDateString('pt-BR')}
+                    </div>
+                  )}
+                  
+                  <Button 
+                    onClick={() => handleCompleteTask(task)}
+                    className={`w-full ${
+                      task.completed 
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' 
+                        : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                    } text-white transform hover:scale-105 transition-all duration-300`}
+                    disabled={task.completed}
+                  >
+                    {task.completed ? (
+                      <>
+                        <Star className="w-4 h-4 mr-2" />
+                        Colher Fruto
+                      </>
+                    ) : (
+                      <>
+                        <Heart className="w-4 h-4 mr-2" />
+                        Completar Tarefa
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            );
+          })}
+
+          {tasksForSelectedDate.length === 0 && (
+            <div className="col-span-full text-center py-16">
+              <div className="space-y-6">
+                <div className="text-8xl animate-bounce">🌱</div>
+                <div className="space-y-4">
+                  <p className={`${colors.text} text-xl mb-4`}>
+                    {selectedCategory || selectedDate ? 'Nenhuma tarefa encontrada para os filtros selecionados.' : 'Seu jardim sagrado está aguardando. Plante sua primeira semente de propósito!'}
+                  </p>
+                  <Button 
+                    onClick={() => setShowNewTask(true)}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-8 py-3 transform hover:scale-105 transition-all duration-300"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Plantar Primeira Semente
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Motivational Quote */}
+        <Card className="bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 backdrop-blur-sm border-white/40 p-6 text-center">
+          <p className={`${colors.text} text-lg italic`}>
+            "Tudo tem o seu tempo determinado, e há tempo para todo o propósito debaixo do céu." - Eclesiastes 3:1
+          </p>
+        </Card>
       </div>
 
       {showNewTask && (
