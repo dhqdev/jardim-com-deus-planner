@@ -9,6 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bible_books: {
+        Row: {
+          book_name: string
+          book_number: number
+          chapters: number
+          created_at: string | null
+          id: number
+          testament: string
+        }
+        Insert: {
+          book_name: string
+          book_number: number
+          chapters: number
+          created_at?: string | null
+          id?: number
+          testament: string
+        }
+        Update: {
+          book_name?: string
+          book_number?: number
+          chapters?: number
+          created_at?: string | null
+          id?: number
+          testament?: string
+        }
+        Relationships: []
+      }
+      bible_verses: {
+        Row: {
+          book_id: number
+          chapter: number
+          created_at: string | null
+          id: number
+          text: string
+          verse: number
+        }
+        Insert: {
+          book_id: number
+          chapter: number
+          created_at?: string | null
+          id?: number
+          text: string
+          verse: number
+        }
+        Update: {
+          book_id?: number
+          chapter?: number
+          created_at?: string | null
+          id?: number
+          text?: string
+          verse?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_verses_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "bible_books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_invites: {
         Row: {
           accepted_at: string | null
