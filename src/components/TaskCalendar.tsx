@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -260,13 +259,12 @@ export const TaskCalendar = ({ currentTheme }: TaskCalendarProps) => {
         </Card>
       </div>
 
-      {showNewTask && (
-        <NewTaskModal 
-          onClose={() => setShowNewTask(false)}
-          onSave={handleSaveTask}
-          selectedDate={selectedDate}
-        />
-      )}
+      <NewTaskModal 
+        open={showNewTask}
+        onClose={() => setShowNewTask(false)}
+        onSave={handleSaveTask}
+        selectedDate={selectedDate}
+      />
     </div>
   );
 };
