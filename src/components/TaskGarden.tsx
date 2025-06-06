@@ -13,7 +13,7 @@ interface TaskGardenProps {
 }
 
 export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
-  const { data: tasks, refetch } = useUserTasks();
+  const { tasks, refetch, updateTask } = useUserTasks();
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const { toast } = useToast();
 
@@ -22,50 +22,50 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       case 'night':
         return {
           text: 'text-white',
-          subtext: 'text-blue-200',
+          subtext: 'text-blue-100',
           accent: 'text-purple-300',
           bg: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900',
-          cardBg: 'bg-indigo-800/60 backdrop-blur-md border-purple-400/30',
-          cardComplete: 'bg-purple-600/80 border-purple-400/50',
-          cardPending: 'bg-indigo-700/60 border-indigo-400/40',
-          button: 'bg-purple-600 hover:bg-purple-700 text-white',
-          badge: 'bg-purple-500/80 text-white'
+          cardBg: 'bg-indigo-800/70 backdrop-blur-md border-purple-400/40',
+          cardComplete: 'bg-purple-600/90 border-purple-400/60',
+          cardPending: 'bg-indigo-700/70 border-indigo-400/50',
+          button: 'bg-purple-600 hover:bg-purple-700 text-white shadow-xl',
+          badge: 'bg-purple-500/90 text-white'
         };
       case 'desert':
         return {
-          text: 'text-orange-900',
-          subtext: 'text-orange-700',
+          text: 'text-amber-900',
+          subtext: 'text-orange-800',
           accent: 'text-amber-700',
           bg: 'bg-gradient-to-br from-orange-800 via-red-700 to-yellow-800',
-          cardBg: 'bg-orange-100/90 backdrop-blur-md border-amber-400/40',
-          cardComplete: 'bg-amber-200/90 border-amber-500/60',
-          cardPending: 'bg-orange-100/80 border-orange-400/50',
-          button: 'bg-amber-600 hover:bg-amber-700 text-white',
-          badge: 'bg-amber-500 text-white'
+          cardBg: 'bg-orange-50/95 backdrop-blur-md border-amber-400/50',
+          cardComplete: 'bg-amber-100/95 border-amber-500/70',
+          cardPending: 'bg-orange-50/90 border-orange-400/60',
+          button: 'bg-amber-600 hover:bg-amber-700 text-white shadow-xl',
+          badge: 'bg-amber-600 text-white'
         };
       case 'gratitude':
         return {
           text: 'text-pink-900',
-          subtext: 'text-pink-700',
+          subtext: 'text-pink-800',
           accent: 'text-rose-700',
           bg: 'bg-gradient-to-br from-pink-800 via-rose-700 to-purple-800',
-          cardBg: 'bg-pink-100/90 backdrop-blur-md border-rose-400/40',
-          cardComplete: 'bg-rose-200/90 border-rose-500/60',
-          cardPending: 'bg-pink-100/80 border-pink-400/50',
-          button: 'bg-rose-600 hover:bg-rose-700 text-white',
-          badge: 'bg-rose-500 text-white'
+          cardBg: 'bg-pink-50/95 backdrop-blur-md border-rose-400/50',
+          cardComplete: 'bg-rose-100/95 border-rose-500/70',
+          cardPending: 'bg-pink-50/90 border-pink-400/60',
+          button: 'bg-rose-600 hover:bg-rose-700 text-white shadow-xl',
+          badge: 'bg-rose-600 text-white'
         };
       default:
         return {
           text: 'text-green-900',
-          subtext: 'text-green-700',
+          subtext: 'text-green-800',
           accent: 'text-emerald-700',
           bg: 'bg-gradient-to-br from-green-800 via-emerald-700 to-teal-800',
-          cardBg: 'bg-green-100/90 backdrop-blur-md border-emerald-400/40',
-          cardComplete: 'bg-emerald-200/90 border-emerald-500/60',
-          cardPending: 'bg-green-100/80 border-green-400/50',
-          button: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-          badge: 'bg-emerald-500 text-white'
+          cardBg: 'bg-green-50/95 backdrop-blur-md border-emerald-400/50',
+          cardComplete: 'bg-emerald-100/95 border-emerald-500/70',
+          cardPending: 'bg-green-50/90 border-green-400/60',
+          button: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl',
+          badge: 'bg-emerald-600 text-white'
         };
     }
   };
@@ -77,7 +77,10 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
 
   const handleTaskComplete = async (taskId: string) => {
     try {
-      // Implementar lógica de completar tarefa
+      await updateTask(taskId, { 
+        completed: true, 
+        completed_at: new Date().toISOString() 
+      });
       await refetch();
       toast({
         title: "Tarefa Completada! 🎉",
@@ -96,10 +99,12 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
     <div className={`min-h-screen ${colors.bg} p-4 md:p-6 relative overflow-hidden`}>
       {/* Floating garden elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <TreePine className="absolute top-10 left-10 w-8 h-8 text-green-300/30 animate-float" />
-        <Flower className="absolute top-20 right-20 w-6 h-6 text-pink-300/40 animate-bounce" />
-        <Sparkles className="absolute bottom-20 left-20 w-4 h-4 text-yellow-300/50 animate-pulse" />
-        <Star className="absolute bottom-10 right-10 w-5 h-5 text-blue-300/40 animate-ping" />
+        <TreePine className="absolute top-10 left-10 w-8 h-8 text-green-300/40 animate-bounce" />
+        <Flower className="absolute top-20 right-20 w-6 h-6 text-pink-300/50 animate-pulse" />
+        <Sparkles className="absolute bottom-20 left-20 w-4 h-4 text-yellow-300/60 animate-ping" />
+        <Star className="absolute bottom-10 right-10 w-5 h-5 text-blue-300/50 animate-pulse" />
+        <TreePine className="absolute top-1/2 left-1/4 w-6 h-6 text-emerald-300/30 animate-bounce delay-100" />
+        <Flower className="absolute top-3/4 right-1/3 w-4 h-4 text-rose-300/40 animate-pulse delay-200" />
       </div>
 
       <div className="max-w-6xl mx-auto space-y-6 relative z-10">
@@ -107,85 +112,89 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center space-x-3">
             <TreePine className={`w-8 h-8 ${colors.accent} animate-bounce`} />
-            <h1 className={`text-3xl md:text-4xl font-bold ${colors.text} drop-shadow-lg`}>
+            <h1 className={`text-3xl md:text-4xl font-bold ${colors.text} drop-shadow-2xl`}>
               Jardim Espiritual
             </h1>
             <Flower className={`w-8 h-8 ${colors.accent} animate-pulse`} />
           </div>
-          <p className={`${colors.subtext} text-lg font-semibold drop-shadow-md`}>
+          <p className={`${colors.subtext} text-lg font-bold drop-shadow-lg`}>
             Cultive seus hábitos espirituais e veja seu jardim florescer
           </p>
           
           <Button 
             onClick={() => setShowNewTaskModal(true)}
-            className={`${colors.button} shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 font-bold`}
+            className={`${colors.button} transition-all duration-300 transform hover:scale-105 font-bold text-lg px-6 py-3`}
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-5 h-5 mr-2" />
             Plantar Nova Semente
           </Button>
         </div>
 
         {/* Garden Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className={`${colors.cardBg} border-2 p-6 text-center shadow-xl`}>
-            <CheckCircle className={`w-8 h-8 ${colors.accent} mx-auto mb-2`} />
-            <h3 className={`text-2xl font-bold ${colors.text}`}>{completedTasks.length}</h3>
-            <p className={`${colors.subtext} font-semibold`}>Frutos Colhidos</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className={`${colors.cardBg} border-2 p-6 text-center shadow-2xl transform hover:scale-105 transition-all duration-300`}>
+            <CheckCircle className={`w-10 h-10 ${colors.accent} mx-auto mb-3 animate-pulse`} />
+            <h3 className={`text-3xl font-bold ${colors.text} drop-shadow-lg`}>{completedTasks.length}</h3>
+            <p className={`${colors.subtext} font-bold text-lg`}>Frutos Colhidos</p>
           </Card>
           
-          <Card className={`${colors.cardBg} border-2 p-6 text-center shadow-xl`}>
-            <Clock className={`w-8 h-8 ${colors.accent} mx-auto mb-2`} />
-            <h3 className={`text-2xl font-bold ${colors.text}`}>{pendingTasks.length}</h3>
-            <p className={`${colors.subtext} font-semibold`}>Sementes Crescendo</p>
+          <Card className={`${colors.cardBg} border-2 p-6 text-center shadow-2xl transform hover:scale-105 transition-all duration-300`}>
+            <Clock className={`w-10 h-10 ${colors.accent} mx-auto mb-3 animate-bounce`} />
+            <h3 className={`text-3xl font-bold ${colors.text} drop-shadow-lg`}>{pendingTasks.length}</h3>
+            <p className={`${colors.subtext} font-bold text-lg`}>Sementes Crescendo</p>
           </Card>
           
-          <Card className={`${colors.cardBg} border-2 p-6 text-center shadow-xl`}>
-            <Star className={`w-8 h-8 ${colors.accent} mx-auto mb-2`} />
-            <h3 className={`text-2xl font-bold ${colors.text}`}>{(tasks?.length || 0)}</h3>
-            <p className={`${colors.subtext} font-semibold`}>Total de Plantas</p>
+          <Card className={`${colors.cardBg} border-2 p-6 text-center shadow-2xl transform hover:scale-105 transition-all duration-300`}>
+            <Star className={`w-10 h-10 ${colors.accent} mx-auto mb-3 animate-ping`} />
+            <h3 className={`text-3xl font-bold ${colors.text} drop-shadow-lg`}>{(tasks?.length || 0)}</h3>
+            <p className={`${colors.subtext} font-bold text-lg`}>Total de Plantas</p>
           </Card>
         </div>
 
         {/* Tasks Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Pending Tasks */}
           <div>
-            <h2 className={`text-2xl font-bold ${colors.text} mb-4 text-center drop-shadow-lg`}>
-              🌱 Sementes Crescendo
+            <h2 className={`text-2xl font-bold ${colors.text} mb-6 text-center drop-shadow-xl flex items-center justify-center space-x-2`}>
+              <span>🌱</span>
+              <span>Sementes Crescendo</span>
+              <span>🌱</span>
             </h2>
             <div className="space-y-4">
               {pendingTasks.map((task) => (
-                <Card key={task.id} className={`${colors.cardPending} border-2 p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
+                <Card key={task.id} className={`${colors.cardPending} border-2 p-5 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-102`}>
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className={`font-bold ${colors.text} text-lg mb-2`}>{task.title}</h3>
-                      <p className={`${colors.subtext} text-sm mb-3 font-medium`}>{task.description}</p>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={`${colors.badge} font-bold`}>
+                      <h3 className={`font-bold ${colors.text} text-xl mb-3 drop-shadow-md`}>{task.title}</h3>
+                      <p className={`${colors.subtext} text-sm mb-4 font-semibold leading-relaxed`}>{task.description}</p>
+                      <div className="flex items-center space-x-3">
+                        <Badge className={`${colors.badge} font-bold text-sm px-3 py-1`}>
                           {task.category}
                         </Badge>
-                        <Badge variant="outline" className={`${colors.text} border-current font-bold`}>
-                          {task.difficulty}
-                        </Badge>
+                        {task.verse && (
+                          <Badge variant="outline" className={`${colors.text} border-current font-bold text-xs`}>
+                            Versículo
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <Button
                       onClick={() => handleTaskComplete(task.id)}
-                      className={`${colors.button} ml-4 shadow-lg hover:shadow-xl transition-all duration-200 font-bold`}
+                      className={`${colors.button} ml-4 transition-all duration-200 font-bold px-4 py-2`}
                     >
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-5 h-5" />
                     </Button>
                   </div>
                 </Card>
               ))}
               
               {pendingTasks.length === 0 && (
-                <Card className={`${colors.cardBg} border-2 p-8 text-center shadow-xl`}>
-                  <Sparkles className={`w-12 h-12 ${colors.accent} mx-auto mb-4 animate-pulse`} />
-                  <p className={`${colors.text} font-bold text-lg`}>
-                    Todas as sementes foram plantadas! 
+                <Card className={`${colors.cardBg} border-2 p-8 text-center shadow-2xl`}>
+                  <Sparkles className={`w-16 h-16 ${colors.accent} mx-auto mb-4 animate-pulse`} />
+                  <p className={`${colors.text} font-bold text-xl mb-2 drop-shadow-lg`}>
+                    Todas as sementes foram plantadas! 🎉
                   </p>
-                  <p className={`${colors.subtext} font-medium`}>
+                  <p className={`${colors.subtext} font-semibold text-lg`}>
                     Plante mais sementes para continuar crescendo espiritualmente.
                   </p>
                 </Card>
@@ -195,21 +204,24 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
 
           {/* Completed Tasks */}
           <div>
-            <h2 className={`text-2xl font-bold ${colors.text} mb-4 text-center drop-shadow-lg`}>
-              🌸 Jardim Florescendo
+            <h2 className={`text-2xl font-bold ${colors.text} mb-6 text-center drop-shadow-xl flex items-center justify-center space-x-2`}>
+              <span>🌸</span>
+              <span>Jardim Florescendo</span>
+              <span>🌸</span>
             </h2>
             <div className="space-y-4">
               {completedTasks.map((task) => (
-                <Card key={task.id} className={`${colors.cardComplete} border-2 p-4 shadow-lg`}>
-                  <div className="flex items-center space-x-3">
-                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+                <Card key={task.id} className={`${colors.cardComplete} border-2 p-5 shadow-xl opacity-90`}>
+                  <div className="flex items-center space-x-4">
+                    <CheckCircle className="w-7 h-7 text-green-600 flex-shrink-0 animate-pulse" />
                     <div className="flex-1">
-                      <h3 className={`font-bold ${colors.text} text-lg mb-1 line-through`}>{task.title}</h3>
-                      <p className={`${colors.subtext} text-sm font-medium opacity-80`}>{task.description}</p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Badge className={`${colors.badge} font-bold`}>
+                      <h3 className={`font-bold ${colors.text} text-lg mb-2 line-through opacity-80 drop-shadow-md`}>{task.title}</h3>
+                      <p className={`${colors.subtext} text-sm font-semibold opacity-70 leading-relaxed`}>{task.description}</p>
+                      <div className="flex items-center space-x-2 mt-3">
+                        <Badge className={`${colors.badge} font-bold text-xs px-2 py-1 opacity-80`}>
                           {task.category}
                         </Badge>
+                        <span className="text-green-600 font-bold text-xs">✓ Concluído</span>
                       </div>
                     </div>
                   </div>
@@ -217,12 +229,12 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
               ))}
               
               {completedTasks.length === 0 && (
-                <Card className={`${colors.cardBg} border-2 p-8 text-center shadow-xl`}>
-                  <TreePine className={`w-12 h-12 ${colors.accent} mx-auto mb-4 animate-bounce`} />
-                  <p className={`${colors.text} font-bold text-lg`}>
-                    Seu jardim espiritual está esperando!
+                <Card className={`${colors.cardBg} border-2 p-8 text-center shadow-2xl`}>
+                  <TreePine className={`w-16 h-16 ${colors.accent} mx-auto mb-4 animate-bounce`} />
+                  <p className={`${colors.text} font-bold text-xl mb-2 drop-shadow-lg`}>
+                    Seu jardim espiritual está esperando! 🌿
                   </p>
-                  <p className={`${colors.subtext} font-medium`}>
+                  <p className={`${colors.subtext} font-semibold text-lg`}>
                     Complete tarefas para ver suas plantas florescerem.
                   </p>
                 </Card>
@@ -233,8 +245,8 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       </div>
 
       <NewTaskModal 
-        open={showNewTaskModal} 
-        onOpenChange={setShowNewTaskModal}
+        isOpen={showNewTaskModal} 
+        onClose={() => setShowNewTaskModal(false)}
         onTaskCreated={() => {
           refetch();
           setShowNewTaskModal(false);
