@@ -9,12 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Sprout } from 'lucide-react';
 
 interface NewTaskModalProps {
+  open: boolean;
   onClose: () => void;
   onSave: (task: any) => void;
   selectedDate?: Date | null;
 }
 
-export const NewTaskModal = ({ onClose, onSave, selectedDate }: NewTaskModalProps) => {
+export const NewTaskModal = ({ open, onClose, onSave, selectedDate }: NewTaskModalProps) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -61,10 +62,15 @@ export const NewTaskModal = ({ onClose, onSave, selectedDate }: NewTaskModalProp
       verse: getRandomVerse(),
       status: 'seed'
     });
+    
+    // Reset form
+    setTitle('');
+    setCategory('');
+    setDescription('');
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-sm max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-green-800">

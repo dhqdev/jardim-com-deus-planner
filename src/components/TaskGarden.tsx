@@ -13,7 +13,7 @@ interface TaskGardenProps {
 }
 
 export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
-  const { tasks, refetch, updateTask } = useUserTasks();
+  const { tasks, refetch, updateTask, createTask } = useUserTasks();
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const { toast } = useToast();
 
@@ -33,37 +33,37 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
         };
       case 'desert':
         return {
-          text: 'text-amber-900',
-          subtext: 'text-orange-800',
-          accent: 'text-amber-700',
+          text: 'text-white',
+          subtext: 'text-orange-100',
+          accent: 'text-amber-300',
           bg: 'bg-gradient-to-br from-orange-800 via-red-700 to-yellow-800',
-          cardBg: 'bg-orange-50/95 backdrop-blur-md border-amber-400/50',
-          cardComplete: 'bg-amber-100/95 border-amber-500/70',
-          cardPending: 'bg-orange-50/90 border-orange-400/60',
+          cardBg: 'bg-orange-900/80 backdrop-blur-md border-amber-400/60',
+          cardComplete: 'bg-amber-800/90 border-amber-500/70',
+          cardPending: 'bg-orange-800/80 border-orange-400/60',
           button: 'bg-amber-600 hover:bg-amber-700 text-white shadow-xl',
           badge: 'bg-amber-600 text-white'
         };
       case 'gratitude':
         return {
-          text: 'text-pink-900',
-          subtext: 'text-pink-800',
-          accent: 'text-rose-700',
+          text: 'text-white',
+          subtext: 'text-pink-100',
+          accent: 'text-rose-300',
           bg: 'bg-gradient-to-br from-pink-800 via-rose-700 to-purple-800',
-          cardBg: 'bg-pink-50/95 backdrop-blur-md border-rose-400/50',
-          cardComplete: 'bg-rose-100/95 border-rose-500/70',
-          cardPending: 'bg-pink-50/90 border-pink-400/60',
+          cardBg: 'bg-pink-900/80 backdrop-blur-md border-rose-400/60',
+          cardComplete: 'bg-rose-800/90 border-rose-500/70',
+          cardPending: 'bg-pink-800/80 border-pink-400/60',
           button: 'bg-rose-600 hover:bg-rose-700 text-white shadow-xl',
           badge: 'bg-rose-600 text-white'
         };
       default:
         return {
-          text: 'text-green-900',
-          subtext: 'text-green-800',
-          accent: 'text-emerald-700',
+          text: 'text-white',
+          subtext: 'text-green-100',
+          accent: 'text-emerald-300',
           bg: 'bg-gradient-to-br from-green-800 via-emerald-700 to-teal-800',
-          cardBg: 'bg-green-50/95 backdrop-blur-md border-emerald-400/50',
-          cardComplete: 'bg-emerald-100/95 border-emerald-500/70',
-          cardPending: 'bg-green-50/90 border-green-400/60',
+          cardBg: 'bg-green-900/80 backdrop-blur-md border-emerald-400/60',
+          cardComplete: 'bg-emerald-800/90 border-emerald-500/70',
+          cardPending: 'bg-green-800/80 border-green-400/60',
           button: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl',
           badge: 'bg-emerald-600 text-white'
         };
@@ -90,6 +90,24 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       toast({
         title: "Erro",
         description: "Não foi possível completar a tarefa. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTaskSave = async (taskData: any) => {
+    try {
+      await createTask(taskData);
+      await refetch();
+      setShowNewTaskModal(false);
+      toast({
+        title: "Semente Plantada! 🌱",
+        description: "Uma nova semente foi plantada em seu jardim espiritual!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar a tarefa. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -213,7 +231,7 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
               {completedTasks.map((task) => (
                 <Card key={task.id} className={`${colors.cardComplete} border-2 p-5 shadow-xl opacity-90`}>
                   <div className="flex items-center space-x-4">
-                    <CheckCircle className="w-7 h-7 text-green-600 flex-shrink-0 animate-pulse" />
+                    <CheckCircle className="w-7 h-7 text-green-300 flex-shrink-0 animate-pulse" />
                     <div className="flex-1">
                       <h3 className={`font-bold ${colors.text} text-lg mb-2 line-through opacity-80 drop-shadow-md`}>{task.title}</h3>
                       <p className={`${colors.subtext} text-sm font-semibold opacity-70 leading-relaxed`}>{task.description}</p>
@@ -221,7 +239,7 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
                         <Badge className={`${colors.badge} font-bold text-xs px-2 py-1 opacity-80`}>
                           {task.category}
                         </Badge>
-                        <span className="text-green-600 font-bold text-xs">✓ Concluído</span>
+                        <span className="text-green-300 font-bold text-xs">✓ Concluído</span>
                       </div>
                     </div>
                   </div>
@@ -245,12 +263,9 @@ export const TaskGarden = ({ currentTheme }: TaskGardenProps) => {
       </div>
 
       <NewTaskModal 
-        isOpen={showNewTaskModal} 
+        open={showNewTaskModal} 
         onClose={() => setShowNewTaskModal(false)}
-        onTaskCreated={() => {
-          refetch();
-          setShowNewTaskModal(false);
-        }}
+        onSave={handleTaskSave}
       />
     </div>
   );
