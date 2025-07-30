@@ -7,411 +7,14 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.12 (cd3cf9e)"
+  }
   public: {
     Tables: {
-      community_invites: {
-        Row: {
-          accepted_at: string | null
-          email: string
-          id: string
-          invite_token: string | null
-          invited_at: string | null
-          is_accepted: boolean | null
-          user_id: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          email: string
-          id?: string
-          invite_token?: string | null
-          invited_at?: string | null
-          is_accepted?: boolean | null
-          user_id: string
-        }
-        Update: {
-          accepted_at?: string | null
-          email?: string
-          id?: string
-          invite_token?: string | null
-          invited_at?: string | null
-          is_accepted?: boolean | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      daily_quotes: {
-        Row: {
-          author: string
-          bible_passage: string
-          bible_reference: string
-          created_at: string | null
-          day_of_week: number
-          devotional_text: string
-          id: string
-          quote: string
-          updated_at: string | null
-        }
-        Insert: {
-          author: string
-          bible_passage: string
-          bible_reference: string
-          created_at?: string | null
-          day_of_week: number
-          devotional_text: string
-          id?: string
-          quote: string
-          updated_at?: string | null
-        }
-        Update: {
-          author?: string
-          bible_passage?: string
-          bible_reference?: string
-          created_at?: string | null
-          day_of_week?: number
-          devotional_text?: string
-          id?: string
-          quote?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      diary_entries: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          mood: string | null
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          mood?: string | null
-          title: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          mood?: string | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      friendships: {
-        Row: {
-          created_at: string | null
-          friend_id: string
-          id: string
-          status: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          friend_id: string
-          id?: string
-          status?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          friend_id?: string
-          id?: string
-          status?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          image_url: string | null
-          message_type: string | null
-          prayer_id: string | null
-          read_at: string | null
-          receiver_id: string
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          message_type?: string | null
-          prayer_id?: string | null
-          read_at?: string | null
-          receiver_id: string
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          image_url?: string | null
-          message_type?: string | null
-          prayer_id?: string | null
-          read_at?: string | null
-          receiver_id?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_prayer_id_fkey"
-            columns: ["prayer_id"]
-            isOneToOne: false
-            referencedRelation: "prayers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notifications: {
-        Row: {
-          content: string
-          created_at: string | null
-          from_user_id: string | null
-          id: string
-          is_read: boolean | null
-          related_id: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          from_user_id?: string | null
-          id?: string
-          is_read?: boolean | null
-          related_id?: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          from_user_id?: string | null
-          id?: string
-          is_read?: boolean | null
-          related_id?: string | null
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      prayer_support: {
-        Row: {
-          created_at: string | null
-          id: string
-          message: string | null
-          prayer_id: string
-          supporter_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          prayer_id: string
-          supporter_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          message?: string | null
-          prayer_id?: string
-          supporter_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prayer_support_prayer_id_fkey"
-            columns: ["prayer_id"]
-            isOneToOne: false
-            referencedRelation: "prayers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      prayers: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_answered: boolean | null
-          is_private: boolean | null
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_answered?: boolean | null
-          is_private?: boolean | null
-          title: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_answered?: boolean | null
-          is_private?: boolean | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          church: string | null
-          community_access: boolean | null
-          created_at: string | null
-          email: string | null
-          id: string
-          name: string | null
-          testimony: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          church?: string | null
-          community_access?: boolean | null
-          created_at?: string | null
-          email?: string | null
-          id: string
-          name?: string | null
-          testimony?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          church?: string | null
-          community_access?: boolean | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          name?: string | null
-          testimony?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      user_daily_progress: {
-        Row: {
-          created_at: string | null
-          date: string
-          devotional_completed: boolean | null
-          id: string
-          passage_completed: boolean | null
-          quote_completed: boolean | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          date?: string
-          devotional_completed?: boolean | null
-          id?: string
-          passage_completed?: boolean | null
-          quote_completed?: boolean | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          date?: string
-          devotional_completed?: boolean | null
-          id?: string
-          passage_completed?: boolean | null
-          quote_completed?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_settings: {
-        Row: {
-          created_at: string | null
-          email_reminders: boolean | null
-          id: string
-          notifications: boolean | null
-          sound_effects: boolean | null
-          theme: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email_reminders?: boolean | null
-          id: string
-          notifications?: boolean | null
-          sound_effects?: boolean | null
-          theme?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email_reminders?: boolean | null
-          id?: string
-          notifications?: boolean | null
-          sound_effects?: boolean | null
-          theme?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      user_tasks: {
-        Row: {
-          category: string
-          completed: boolean | null
-          completed_at: string | null
-          created_at: string | null
-          description: string | null
-          id: string
-          title: string
-          updated_at: string | null
-          user_id: string
-          verse: string | null
-        }
-        Insert: {
-          category: string
-          completed?: boolean | null
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          title: string
-          updated_at?: string | null
-          user_id: string
-          verse?: string | null
-        }
-        Update: {
-          category?: string
-          completed?: boolean | null
-          completed_at?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-          verse?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
@@ -428,21 +31,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -460,14 +67,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -483,14 +92,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -506,14 +117,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -521,14 +134,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
