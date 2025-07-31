@@ -1,4 +1,4 @@
-**URL**: https://planejamento-com-deus.lovable.app/auth
+**URL**: https://preview--planejamento-com-deus.lovable.app/auth
 
 ✨ Sobre o Projeto
 Este aplicativo nasceu do desejo de criar um espaço digital onde cristãos pudessem se aproximar mais de Deus, mesmo em meio à correria do dia a dia. Com o Conecta Fé, qualquer pessoa pode registrar seus pedidos de oração, anotar seus devocionais diários, e construir uma jornada de fé mais firme e constante.
